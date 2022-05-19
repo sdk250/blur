@@ -150,8 +150,10 @@ body {
 #searchContent {
 	position: absolute;
 	top: 30px;
-	/* font-size: 1px; */
-	/* color: rgb(219, 18, 18); */
+	left: 20px;
+	width: 100px;
+	font-size: small;
+	color: rgb(204, 204, 204);
 }
 @keyframes turn {
 	from {

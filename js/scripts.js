@@ -25,6 +25,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
+dark.selectId("test").innerText = 3.0;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
