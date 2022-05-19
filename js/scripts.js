@@ -110,7 +110,7 @@ searchText.onblur = function() {
 	if (that.searchTimer) {
 		clearTimeout(that.searchTimer);
 	}
-	//that.searchTimer = setTimeout(unLong, 3000);
+	that.searchTimer = setTimeout(unLong, 3000);
 };
 searchText.onfocus = function() {
 	if (that.searchTimer) {
