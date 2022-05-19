@@ -318,6 +318,7 @@ function Previous() {
 		return false;
 	}
 	that.playCode--;
+	audio.src = null;
 	Pause(true);
 	playerInitial(that.cache[that.playCode]);
 }
@@ -398,7 +399,6 @@ searchText.oninput = function(e) {
 			that.searchContents = document.createElement("li");
 			that.searchContents.ids = i;
 			that.searchContents.style.cursor = "pointer";
-			that.searchContents.style.fontSize = "10px";
 			that.searchContents.innerText = that.searchResult.result.songs[i].ar[0].name + " - " + that.searchResult.result.songs[i].name;
 			searchContent.appendChild(that.searchContents);
 			searchContent.appendChild(document.createElement("hr"));
@@ -407,13 +407,13 @@ searchText.oninput = function(e) {
 		that.searchContent.children[0].onclick = function() {
 			getMusic(0);
 		};
-		that.searchContent.children[1].onclick = function() {
+		that.searchContent.children[2].onclick = function() {
 			getMusic(1);
 		};
-		that.searchContent.children[2].onclick = function() {
+		that.searchContent.children[4].onclick = function() {
 			getMusic(2);
 		};
-		that.searchContent.children[3].onclick = function() {
+		that.searchContent.children[6].onclick = function() {
 			getMusic(3);
 		};
 		function getMusic(parameter) {
