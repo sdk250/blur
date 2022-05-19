@@ -110,7 +110,7 @@ searchText.onblur = function() {
 	if (that.searchTimer) {
 		clearTimeout(that.searchTimer);
 	}
-	that.searchTimer = setTimeout(unLong, 3000);
+	//that.searchTimer = setTimeout(unLong, 3000);
 };
 searchText.onfocus = function() {
 	if (that.searchTimer) {
@@ -173,6 +173,8 @@ background.onclick = function() {
 		
 	} else if (that.lrcShow == true) {
 		aShow();
+	} else {
+		console.log("lrcShow Error!");
 	}
 };
 
@@ -195,7 +197,6 @@ function getMusicURL(parameter) {
 			console.log("The current song has no copyright, Please next song.");
 			that.playerState = true;
 			Next();
-			this.abort();
 			return false;
 		}
 		that.cache[that.playCode].data.lryicRes = window.JSON.parse(this.response[1]).lyric;
@@ -208,7 +209,6 @@ function getMusicData(parameter) {
 		that.cache[that.playCode].data.res = window.URL.createObjectURL(this.response);
 		that.playerState = true;
 		audio.src = that.cache[that.playCode].data.res;
-		clearTimeout(that.timer);
 		audio.onpause = function() {
 			Pause();
 			console.log("BEEN PAUSE!");
@@ -244,22 +244,22 @@ function getMusicData(parameter) {
 }
 this.state = 1;
 function Play() {
-	console.log("Play is click!");
+	console.log("Play was click!");
 	if (that.state == 1 && that.playerState == true) {
 		audio.play();
 		playAnimation();
 	} else {
-		console.log("state", that.state);
+		console.log("state", that.state, that.playerState);
 		return false;
 	}
 }
 function Pause(bool) {
-	console.log("Pause is click!");
+	console.log("Pause was click!");
 	if (that.state == 0 && that.playerState == true) {
 		audio.pause();
 		pauseAnimation();
 	} else {
-		console.log("state", that.state);
+		console.log("state", that.state, that.playerState);
 		return false;
 	}
 	if (bool == true) {
@@ -274,23 +274,14 @@ function Next() {
 	if (that.playCode < window.Object.keys(that.cache).length){
 		that.playCode++;
 		Pause(true);
-		if (that.eli) {
-			__eul.innerHTML = "";
-		}
 		playerInitial(that.cache[that.playCode])
 		return true;
 	}
 	get();
 	that.playCode++;
-	audio.src = null;
 	console.log("Next is click!");
-	if (that.eli) {
-		__eul.innerHTML = "";
-	}
 	Pause(true);
-	that.timer = setTimeout(function () {
-		that.playerState = false;
-	}, 2000);
+	that.playerState = false;
 	nextAnimation();
 	next.addEventListener("animationend", function () {
 		next.style.animationName = "none";
@@ -322,20 +313,18 @@ function getMusicPicture(parameter) {
 	});
 }
 function Previous() {
-	that.playCode--;
 	if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
 		console.log("No cache");
 		return false;
 	}
+	that.playCode--;
 	Pause(true);
-	if (that.eli) {
-		__eul.innerHTML = "";
-	}
 	playerInitial(that.cache[that.playCode]);
 }
 function createLrcObj(lrc) {
 	oLRC = null;
-	if(lrc.length==0) return;
+	if(lrc.length == 0)
+		return;
 	var lrcs = lrc.split('\n');
 	oLRC = {
 		ti: "",
@@ -379,6 +368,7 @@ function createLrcObj(lrc) {
 	};
 	ppxx = 100;
 	console.log(oLRC.ms.length);
+	__eul.innerHTML = "";
 	for (var i in oLRC.ms) {
 		that.eli = document.createElement("li");
 		that.eli.innerText = oLRC.ms[i].c;
@@ -408,6 +398,7 @@ searchText.oninput = function(e) {
 			that.searchContents = document.createElement("li");
 			that.searchContents.ids = i;
 			that.searchContents.style.cursor = "pointer";
+			that.searchContents.style.fontSize = "10px";
 			that.searchContents.innerText = that.searchResult.result.songs[i].ar[0].name + " - " + that.searchResult.result.songs[i].name;
 			searchContent.appendChild(that.searchContents);
 			searchContent.appendChild(document.createElement("hr"));
@@ -438,14 +429,11 @@ searchText.oninput = function(e) {
 			that.state = 0;
 			that.playCode++;
 			Pause(true);
-			if (that.eli) {
-				__eul.innerHTML = "";
-			}
 			playerInitial(that.cache[window.Object.keys(that.cache).length]);
 		}
 	});
 };
-function rq(method, URL, parameter, dataType, responseType, success, bool) {
+function rq(method, URL, parameter, dataType, responseType, success) {
 	dark.Ajax({
 		"method": method,
 		"url": URL,
@@ -455,19 +443,7 @@ function rq(method, URL, parameter, dataType, responseType, success, bool) {
 		"parameter": parameter,
 		"dataType": dataType,
 		"responseType": responseType,
-		"success": success,
-		"timeout": function () {
-			console.log("Request timeout", this);
-			that.playerState = true;
-			bool ? Next() : null;
-			this.abort();
-		},
-		"fail": function () {
-			console.log("Request failed", this);
-			that.playerState = true;
-			bool ? Next() : null;
-			this.abort();
-		}
+		"success": success
 	});
 }
 window.onkeydown = function(e) {
