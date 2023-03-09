@@ -1,14 +1,15 @@
 //JAVASCRIPT CONTENT
 "use strict";
 const that = this;
+that.xhr = new window.XMLHttpRequest();
 var player,
 	background,
-	buttom,
+	bottom,
 	picture,
 	play,
 	pause,
 	next,
-	lrcBakcground,
+	lrcBackground,
 	dark,
 	ppxx,
 	oLRC,
@@ -17,7 +18,7 @@ var player,
 	search,
 	sPic,
 	searchText,
-	searchBackground,
+	// searchBackground,
 	searchContent,
 	searchContentBackground,
 	currentLine,
@@ -25,11 +26,11 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 3.0;
+dark.selectId("test").innerText = 3.8;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
-buttom = dark.selectId("buttom");
+bottom = dark.selectId("bottom");
 picture = dark.selectId("picture");
 play = dark.selectId("play");
 pause = dark.selectId("pause");
@@ -40,37 +41,37 @@ __eul = dark.selectId("lrc");
 search = dark.selectId("search");
 sPic = dark.selectId("searchPic");
 searchText = dark.selectId("searchText");
-searchBackground = dark.selectId("searchBackground");
+// searchBackground = dark.selectId("searchBackground");
 searchContent = dark.selectId("searchContent");
 searchContentBackground = dark.selectId("searchContentBackground");
 
-this.cache = {};
+this.cache = [];
 
 /* init Onplay code */
-this.playCode = 1;
+this.playCode = 0;
 
 player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
-player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
+player.style.left = (window.innerWidth / 2 - player.offsetWidth / 2) + "px";
 player.style.borderRadius = "15px 50px 30px 5px";
 
-play.style.left = (buttom.clientWidth / 2 - 20) + "px";
+play.style.left = (bottom.clientWidth / 2 - 20) + "px";
 /* is Pause widget */
-pause.style.left = (buttom.clientWidth / 2 - 20) + "px";
+pause.style.left = (bottom.clientWidth / 2 - 20) + "px";
 /* is Next widget */
-next.style.left = (buttom.clientWidth / 2 + 40) + "px";
+next.style.left = (bottom.clientWidth / 2 + bottom.offsetWidth * 0.2) + "px";
 /* is musicInfo widget */
-musicInfo.style.left = (buttom.clientWidth / 2 - 10) + "px";
+musicInfo.style.left = (bottom.clientWidth / 2 - 10) + "px";
 
 search.style.top = (window.innerHeight / 15) + "px";
 search.style.left = (window.innerWidth / 12) + "px";
 searchText.style.top = -10 + "px";
 searchText.style.left = 14 + "px";
-searchBackground.style.top = (window.innerHeight / 16) + "px";
-searchBackground.style.left = (window.innerWidth / 12) + "px";
+// searchBackground.style.top = (window.innerHeight / 16) + "px";
+// searchBackground.style.left = (window.innerWidth / 12) + "px";
 
-lrcBakcground = dark.selectId("lrcBackground");
-lrcBakcground.style.top = (window.innerHeight / 2 - lrcBakcground.clientHeight / 1.4) + "px";
-lrcBakcground.style.left = (window.innerWidth / 2 - lrcBakcground.clientWidth / 2) + "px";
+lrcBackground = dark.selectId("lrcBackground");
+lrcBackground.style.top = (window.innerHeight / 2 - lrcBackground.clientHeight / 1.4) + "px";
+lrcBackground.style.left = (window.innerWidth / 2 - lrcBackground.clientWidth / 2) + "px";
 
 /* on window change */
 window.onresize = function () {
@@ -78,12 +79,12 @@ window.onresize = function () {
 	player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
 	box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
 	box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
-	lrcBakcground.style.top = (window.innerHeight / 2 - lrcBakcground.clientHeight / 1.4) + "px";
-	lrcBakcground.style.left = (window.innerWidth / 2 - lrcBakcground.clientWidth / 2) + "px";
+	lrcBackground.style.top = (window.innerHeight / 2 - lrcBackground.clientHeight / 1.4) + "px";
+	lrcBackground.style.left = (window.innerWidth / 2 - lrcBackground.clientWidth / 2) + "px";
 	search.style.top = (window.innerHeight / 15) + "px";
 	search.style.left = (window.innerWidth / 12) + "px";
-	searchBackground.style.top = (window.innerHeight / 16) + "px";
-	searchBackground.style.left = (window.innerWidth / 12) + "px";
+	// searchBackground.style.top = (window.innerHeight / 16) + "px";
+	// searchBackground.style.left = (window.innerWidth / 12) + "px";
 	console.log("chenge!");
 };
 
@@ -104,7 +105,7 @@ sPic.onclick = function() {
 		that.searchTimer = setTimeout(unLong, 3000);
 		that.searchShow = true;
 	} else {
-		console.log("sPic Error");
+		console.error("sPic Error");
 	}
 };
 searchText.onblur = function() {
@@ -168,30 +169,54 @@ searchText.onfocus = function() {
 	*/
 };
 this.lrcShow = false;
-background.onclick = function() {
+background.onclick = () => {
 	if (that.lrcShow == false) {
 		cShow();
-		
 	} else if (that.lrcShow == true) {
 		aShow();
 	} else {
-		console.log("lrcShow Error!");
+		console.error("lrcShow Error!");
 	}
 };
+lrcBackground.onclick = background.onclick;
 
 play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
 picture.addEventListener("click", Previous);
 
+const get = () => {
+	that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
+	that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	that.xhr.dataType = "json";
+	that.xhr.responseType = "json";
+	that.xhr.onload = (res) => {
+		that.cache[window.Object.keys(that.cache).length] = {id: /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1]};
+		that.playerState = false;
+		that.xhr.open("POST", "http://sdk250.cn:20880", true);
+		that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		that.xhr.dataType = "json";
+		that.xhr.responseType = "json";
+		that.xhr.onload = (res) => {
+			if (res.currentTarget.response.data == null) {
+				console.log("The current song has no copyright, Please next song.");
+				that.playerState = true;
+				Next();
+				return false;
+			}
+			that.cache[that.playCode].data = res.currentTarget.response.data;
+			that.cache[that.playCode].name = res.currentTarget.response.name;
+			that.cache[that.playCode].picture = res.currentTarget.response.picture;
+			that.cache[that.playCode].art = res.currentTarget.response.art;
+			that.cache[that.playCode].lyric = res.currentTarget.response.lyric;
+			playerInitial(that.cache[that.playCode]);
+		};
+		that.xhr.send("songid=" + that.cache[that.playCode].id);
+	};
+	that.xhr.send(null);
+};
 get();
-function get() {
-	rq("GET", "https://api.uomg.com/api/rand.music", {"sort": "热歌榜","format": "json"}, "json", "json", function () {
-		that.cache[(window.Object.keys(that.cache).length + 1)] = this.response;
-		that.playerState = null;
-		playerInitial(this.response);
-	}, true);
-}
+
 function getMusicURL(parameter) {
 	rq("POST", "http://106.13.205.72:5000/req", {"songids": /url\?id\=(\d{3,12})/.exec(parameter.data.url)[1]}, "json", "json", function () {
 		if (window.JSON.parse(this.response[0]).data[0].url == null) {
@@ -246,9 +271,8 @@ function getMusicData(parameter) {
 this.state = 1;
 function Play() {
 	console.log("Play was click!");
-	if (that.state == 1 && that.playerState == true) {
+	if (that.playerState == true) {
 		audio.play();
-		playAnimation();
 	} else {
 		console.log("state", that.state, that.playerState);
 		return false;
@@ -256,9 +280,8 @@ function Play() {
 }
 function Pause(bool) {
 	console.log("Pause was click!");
-	if (that.state == 0 && that.playerState == true) {
+	if (that.playerState == true) {
 		audio.pause();
-		pauseAnimation();
 	} else {
 		console.log("state", that.state, that.playerState);
 		return false;
@@ -270,12 +293,11 @@ function Pause(bool) {
 function Next() {
 	if (that.playerState != true) {
 		console.log("Don't click");
-		return false;
+		// return false;
 	}
-	if (that.playCode < window.Object.keys(that.cache).length){
-		that.playCode++;
+	if (that.playCode < window.Object.keys(that.cache).length - 1){
 		Pause(true);
-		playerInitial(that.cache[that.playCode])
+		playerInitial(that.cache[++that.playCode])
 		return true;
 	}
 	get();
@@ -289,14 +311,66 @@ function Next() {
 		console.log("Next animation is end.");
 	});
 }
+function Previous() {
+	if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
+		console.log("No cache");
+		return false;
+	}
+	Pause(true);
+	playerInitial(that.cache[--that.playCode]);
+}
+
 function playerInitial(parameter) {
+	let xhr = new window.XMLHttpRequest();
+	xhr.open("GET", that.cache[that.playCode].data, true);
+	xhr.responseType = "blob";
+	xhr.onload = (res) => {
+		that.cache[that.playCode]["res"] = window.URL.createObjectURL(res.currentTarget.response);
+		that.playerState = true;
+		audio.src = that.cache[that.playCode].res;
+		audio.onpause = function() {
+			pauseAnimation();
+			console.log("BEEN PAUSE!");
+		};
+		audio.onplay = function() {
+			playAnimation();
+			console.log("BEEN PLAY!");
+		};
+		audio.onended = function(){
+			Next();
+			console.log("Restart");
+		};
+		if (window.Object.keys(that.cache).length > 1) {
+			audio.oncanplay = function () {
+				audio.play();
+				console.log("AUTO PLAY");
+			};
+		}
+		audio.addEventListener("timeupdate", function () {
+			for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
+				if (this.currentTime < oLRC.ms[currentLine + 1].t){
+					currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
+					currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
+					currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
+					currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
+					__eul.children[currentLine].setAttribute("style", "color: white");
+					__eul.style.transform = "translateY(" + (ppxx - __eul.children[currentLine].offsetTop) + "px)";
+					break;
+				}
+			}
+		});
+	};
+	xhr.onerror = (err) => {console.log(err);};
+	xhr.send(null);
 	playerInit(parameter);
 	getMusicPicture(parameter);
-	getMusicURL(parameter);
+	// getMusicURL(parameter);
+	createLrcObj(parameter.lyric);
 	// getMusicLyric(parameter);
 }
 function playerInit(result) {
-	musicInfo.innerHTML = "<p id=\"mName\">" + result.data.name + "</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + result.data.artistsname + "</p>";
+	musicInfo.innerHTML = "<p id=\"mName\">" + result.name +
+		"</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + result.art + "</p>";
 	if (document.getElementById("mName").scrollWidth > musicInfo.clientWidth) {
 		console.log("Text is long.");
 		musicNameAnimation();
@@ -306,22 +380,16 @@ function playerInit(result) {
 	}
 }
 function getMusicPicture(parameter) {
-	rq("GET", parameter.data.picurl, null, null, "blob", function() {
-		that.cache[that.playCode].data.picRes = window.URL.createObjectURL(this.response);
-		document.body.style.backgroundImage = "url(\"" + that.cache[that.playCode].data.picRes + "\")";
-		background.style.backgroundImage = "url(\"" + that.cache[that.playCode].data.picRes + "\")";
-		picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].data.picRes + "\")"; 
-	});
-}
-function Previous() {
-	if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
-		console.log("No cache");
-		return false;
-	}
-	that.playCode--;
-	audio.src = null;
-	Pause(true);
-	playerInitial(that.cache[that.playCode]);
+	that.xhr.open("GET", parameter.picture, true);
+	that.xhr.responseType = "blob";
+	that.xhr.onload = (response) => {
+		that.cache[that.playCode].picRes = window.URL.createObjectURL(response.currentTarget.response);
+		// document.body.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
+		background.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
+		// background.style.backgroundSize = "50%";
+		picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")"; 
+	};
+	that.xhr.send(null);
 }
 function createLrcObj(lrc) {
 	oLRC = null;
@@ -475,3 +543,97 @@ window.onkeydown = function(e) {
 		searchText.blur();
 	}
 };
+function unLong() {
+	searchText.style.animationName = "unLong";
+	searchText.style.animationDuration = "1s";
+	searchText.style.animationTimingFunction = "ease";
+	searchText.style.animationIterationCount = "1";
+	searchContent.innerHTML = "";
+	searchContentBackground.style.display = "none";
+	searchText.style.display = "none";
+	sPic.style.animationName = "zoomIn";
+	sPic.style.animationDuration = "0.6s";
+	sPic.style.animationTimingFunction = "linear";
+	sPic.style.animationIterationCount = 1;
+	sPic.style.display = "inline";
+	that.searchShow = false;
+}
+function cShow() {
+	player.style.animationName = "cShow, zoomOut";
+	player.style.animationDuration = "0.3s, 0.5s";
+	player.style.animationTimingFunction = "linear, linear";
+	player.style.animationIterationCount = "1, 1";
+	player.style.display = "none";
+	box.style.animationName = "show, zoomIn";
+	box.style.animationDuration = "0.3s, 0.5s";
+	box.style.animationTimingFunction = "linear. linear";
+	box.style.animationIterationCount = "1, 1";
+	box.style.display = "inline";
+	// lrcBackground.style.display = "inline";
+	box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
+	box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
+	that.lrcShow = true;
+}
+function aShow() {
+	player.style.animationName = "show, zoomIn";
+	player.style.animationDuration = "0.3s, 0.3s";
+	player.style.animationTimingFunction = "linear, linear";
+	player.style.animationIterationCount = "1, 1";
+	player.style.display = "inline";
+	box.style.animationName = "cShow, zoomOut";
+	box.style.animationDuration = "0.3s, 0,3s";
+	box.style.animationTimingFunction = "linear, linear";
+	box.style.animationIterationCount = "1, 1";
+	box.style.display = "none";
+	// lrcBackground.style.display = "none";
+	player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
+	player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
+	that.lrcShow = false;
+}
+function playAnimation() {
+	picture.style.animationPlayState = "running";
+	play.style.animationName = "cShow, zoomOut";
+	play.style.animationDuration = "0.4s, 0.15s";
+	play.style.animationTimingFunction = "linear, linear";
+	play.style.animationIterationCount = "1, 1";
+	play.style.display = "none";
+	pause.style.animationName = "show, zoomIn";
+	pause.style.animationDuration = "0.4s, 0.15s";
+	pause.style.animationTimingFunction = "linear, linear";
+	pause.style.animationIterationCount = "1, 1";
+	pause.style.display = "inline";
+	that.state = 0;
+}
+function pauseAnimation() {
+	picture.style.animationPlayState = "paused";
+	pause.style.animationName = "cShow, zoomOut";
+	pause.style.animationDuration = "0.4s, 0.15s";
+	pause.style.animationTimingFunction = "linear, linear";
+	pause.style.animationIterationCount = "1, 1";
+	pause.style.display = "none";
+	play.style.animationName = "show, zoomIn";
+	play.style.animationDuration = "0.4s, 0.15s";
+	play.style.animationTimingFunction = "linear, linear";
+	play.style.animationIterationCount = "1, 1";
+	play.style.display = "inline";
+	that.state = 1;
+}
+function nextAnimation() {
+	next.style.animationName = "sTurn";
+	next.style.animationDuration = "0.2s";
+	next.style.animationTimingFunction = "linear";
+	next.style.animationIterationCount = 6;
+	next.style.animationDirection = "alternate";
+}
+function musicNameAnimation() {
+	document.getElementById("mName").style.animationName = "wordsLoop";
+	document.getElementById("mName").style.animationDuration = "6s";
+	document.getElementById("mName").style.animationTimingFunction = "linear";
+	document.getElementById("mName").style.animationIterationCount = "infinite";
+}
+function musicPeoAnimation() {
+	document.getElementById("mPeo").style.animationName = "wordsLoop";
+	document.getElementById("mPeo").style.animationDuration = "6s";
+	document.getElementById("mPeo").style.animationTimingFunction = "linear";
+	document.getElementById("mPeo").style.animationIterationCount = "infinite";
+}
