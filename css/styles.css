@@ -25,8 +25,6 @@ body {
 
 #player {
 	position: absolute;
-	width: 70%;
-	height: 20%;
 	z-index: 2;
 }
 #bottom {
@@ -43,7 +41,7 @@ body {
 	position: absolute;
 	width: 40%;
 	height: auto;
-	border-radius: 60px;
+	border-radius: 100%;
 	background-image: url(../img/0.jpg);
 	background-repeat: no-repeat;
 	background-size: 100% 100%;
@@ -112,8 +110,8 @@ body {
 }
 #box {
 	position: absolute;
-	width: 300px;
-	height: 300px;
+	width: 40%;
+	height: 50%;
 	overflow: hidden;
 	display: none;
 	z-index: 1;

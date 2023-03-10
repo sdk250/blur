@@ -11,14 +11,12 @@ var player,
 	next,
 	lrcBackground,
 	dark,
-	ppxx,
 	oLRC,
 	__eul,
 	box,
 	search,
 	sPic,
 	searchText,
-	// searchBackground,
 	searchContent,
 	searchContentBackground,
 	currentLine,
@@ -26,7 +24,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 3.9;
+dark.selectId("test").innerText = 4.2;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -44,51 +42,46 @@ searchText = dark.selectId("searchText");
 // searchBackground = dark.selectId("searchBackground");
 searchContent = dark.selectId("searchContent");
 searchContentBackground = dark.selectId("searchContentBackground");
+lrcBackground = dark.selectId("lrcBackground");
+
 
 this.cache = [];
 
 /* init Onplay code */
 this.playCode = 0;
 
-player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
-player.style.left = (window.innerWidth / 2 - player.offsetWidth / 2) + "px";
 player.style.borderRadius = "15px 50px 30px 5px";
-
-play.style.left = (bottom.clientWidth / 2 - 20) + "px";
-/* is Pause widget */
-pause.style.left = (bottom.clientWidth / 2 - 20) + "px";
-/* is Next widget */
-next.style.left = (bottom.clientWidth / 2 + bottom.offsetWidth * 0.2) + "px";
-/* is musicInfo widget */
-musicInfo.style.left = (bottom.clientWidth / 2 - 10) + "px";
-
-picture.style.height = picture.offsetWidth + "px";
-
-search.style.top = (window.innerHeight / 15) + "px";
-search.style.left = (window.innerWidth / 12) + "px";
-searchText.style.top = -10 + "px";
-searchText.style.left = 14 + "px";
-// searchBackground.style.top = (window.innerHeight / 16) + "px";
-// searchBackground.style.left = (window.innerWidth / 12) + "px";
-
-lrcBackground = dark.selectId("lrcBackground");
-lrcBackground.style.top = (window.innerHeight / 2 - lrcBackground.clientHeight / 1.4) + "px";
-lrcBackground.style.left = (window.innerWidth / 2 - lrcBackground.clientWidth / 2) + "px";
 
 /* on window change */
 window.onresize = function () {
+	if (window.innerWidth * 0.7 < 400 && window.innerHeight * 0.2 < 200) {
+		player.style.width = window.innerWidth * 0.7 + "px";
+		player.style.height = window.innerHeight * 0.2 + "px";
+	} else {
+		player.style.width = "400px";
+		player.style.height = "200px";
+	}
 	player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
 	player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
-	box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
-	box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
-	lrcBackground.style.top = (window.innerHeight / 2 - lrcBackground.clientHeight / 1.4) + "px";
-	lrcBackground.style.left = (window.innerWidth / 2 - lrcBackground.clientWidth / 2) + "px";
+	play.style.left = (bottom.clientWidth / 2 - 20) + "px";
+	/* is Pause widget */
+	pause.style.left = (bottom.clientWidth / 2 - 20) + "px";
+	/* is Next widget */
+	next.style.left = (bottom.clientWidth / 2 + bottom.offsetWidth * 0.2) + "px";
+	/* is musicInfo widget */
+	musicInfo.style.left = (bottom.clientWidth / 2 - 10) + "px";
 	search.style.top = (window.innerHeight / 15) + "px";
 	search.style.left = (window.innerWidth / 12) + "px";
-	// searchBackground.style.top = (window.innerHeight / 16) + "px";
-	// searchBackground.style.left = (window.innerWidth / 12) + "px";
+	searchText.style.top = -10 + "px";
+	searchText.style.left = 14 + "px";
+	lrcBackground.style.top = (window.innerHeight / 2 - lrcBackground.clientHeight / 1.4) + "px";
+	lrcBackground.style.left = (window.innerWidth / 2 - lrcBackground.clientWidth / 2) + "px";
+	box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
+	box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
+	picture.style.height = picture.offsetWidth + "px";
 	console.log("chenge!");
 };
+window.onresize();
 
 this.searchShow = false;
 sPic.onclick = function() {
@@ -304,7 +297,7 @@ function playerInitial(parameter) {
 					currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
 					currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
 					__eul.children[currentLine].setAttribute("style", "color: white");
-					__eul.style.transform = "translateY(" + (ppxx - __eul.children[currentLine].offsetTop) + "px)";
+					__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
 					break;
 				}
 			}
@@ -386,7 +379,6 @@ function createLrcObj(lrc) {
 		"t": (window.Math.floor(oLRC.ms[(window.Object.keys(oLRC.ms).length - 1)].t) + 3),
 		"c": ""
 	};
-	ppxx = 100;
 	console.log(oLRC.ms.length);
 	__eul.innerHTML = "";
 	for (var i in oLRC.ms) {
