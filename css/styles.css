@@ -42,7 +42,7 @@ body {
 #picture {
 	position: absolute;
 	width: 40%;
-	height: 75%;
+	height: auto;
 	border-radius: 60px;
 	background-image: url(../img/0.jpg);
 	background-repeat: no-repeat;
