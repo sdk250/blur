@@ -26,7 +26,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 3.8;
+dark.selectId("test").innerText = 3.9;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -61,6 +61,8 @@ pause.style.left = (bottom.clientWidth / 2 - 20) + "px";
 next.style.left = (bottom.clientWidth / 2 + bottom.offsetWidth * 0.2) + "px";
 /* is musicInfo widget */
 musicInfo.style.left = (bottom.clientWidth / 2 - 10) + "px";
+
+picture.style.height = picture.offsetWidth + "px";
 
 search.style.top = (window.innerHeight / 15) + "px";
 search.style.left = (window.innerWidth / 12) + "px";
@@ -193,7 +195,7 @@ const get = () => {
 	that.xhr.onload = (res) => {
 		that.cache[window.Object.keys(that.cache).length] = {id: /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1]};
 		that.playerState = false;
-		that.xhr.open("POST", "http://sdk250.cn:20880", true);
+		that.xhr.open("POST", "https://sdk250.cn/api/id", true);
 		that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		that.xhr.dataType = "json";
 		that.xhr.responseType = "json";
@@ -217,64 +219,12 @@ const get = () => {
 };
 get();
 
-function getMusicURL(parameter) {
-	rq("POST", "http://106.13.205.72:5000/req", {"songids": /url\?id\=(\d{3,12})/.exec(parameter.data.url)[1]}, "json", "json", function () {
-		if (window.JSON.parse(this.response[0]).data[0].url == null) {
-			console.log("The current song has no copyright, Please next song.");
-			that.playerState = true;
-			Next();
-			return false;
-		}
-		that.cache[that.playCode].data.lryicRes = window.JSON.parse(this.response[1]).lyric;
-		createLrcObj(window.JSON.parse(this.response[1]).lrc.lyric);
-		getMusicData(window.JSON.parse(this.response[0]));
-	}, true);
-}
-function getMusicData(parameter) {
-	rq("GET", parameter.data[0].url, null, null, "blob", function () {
-		that.cache[that.playCode].data.res = window.URL.createObjectURL(this.response);
-		that.playerState = true;
-		audio.src = that.cache[that.playCode].data.res;
-		audio.onpause = function() {
-			Pause();
-			console.log("BEEN PAUSE!");
-		};
-		audio.onplay = function() {
-			Play();
-			console.log("BEEN PLAY!");
-		};
-		audio.onended = function(){
-			Next();
-			console.log("Restart");
-		};
-		if (window.Object.keys(that.cache).length > 1) {
-			audio.oncanplay = function () {
-				audio.play();
-				console.log("AUTO PLAY");
-			};
-		}
-		audio.addEventListener("timeupdate", function () {
-			for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
-				if (this.currentTime < oLRC.ms[currentLine + 1].t){
-					currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
-					currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
-					currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
-					currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
-					__eul.children[currentLine].setAttribute("style", "color: white");
-					__eul.style.transform = "translateY(" + (ppxx - __eul.children[currentLine].offsetTop) + "px)";
-					break;
-				}
-			}
-		});
-	}, true);
-}
-this.state = 1;
 function Play() {
 	console.log("Play was click!");
 	if (that.playerState == true) {
 		audio.play();
 	} else {
-		console.log("state", that.state, that.playerState);
+		console.log("state", that.playerState);
 		return false;
 	}
 }
@@ -283,7 +233,7 @@ function Pause(bool) {
 	if (that.playerState == true) {
 		audio.pause();
 	} else {
-		console.log("state", that.state, that.playerState);
+		console.log("state", that.playerState);
 		return false;
 	}
 	if (bool == true) {
@@ -495,7 +445,6 @@ searchText.oninput = function(e) {
 				}
 			};
 			audio.src = null;
-			that.state = 0;
 			that.playCode++;
 			Pause(true);
 			playerInitial(that.cache[window.Object.keys(that.cache).length]);
@@ -518,12 +467,10 @@ function rq(method, URL, parameter, dataType, responseType, success) {
 window.onkeydown = function(e) {
 	if (e.keyCode == 32) {
 		console.log("Speace!");
-		if (that.state == 1) {
+		if (that.audio.paused) {
 			Play();
-		} else if (that.state == 0) {
-			Pause();
 		} else {
-			console.log("Error!");
+			Pause();
 		}
 	}
 	if (e.shiftKey && e.keyCode == 78) {
@@ -602,7 +549,6 @@ function playAnimation() {
 	pause.style.animationTimingFunction = "linear, linear";
 	pause.style.animationIterationCount = "1, 1";
 	pause.style.display = "inline";
-	that.state = 0;
 }
 function pauseAnimation() {
 	picture.style.animationPlayState = "paused";
@@ -616,7 +562,6 @@ function pauseAnimation() {
 	play.style.animationTimingFunction = "linear, linear";
 	play.style.animationIterationCount = "1, 1";
 	play.style.display = "inline";
-	that.state = 1;
 }
 function nextAnimation() {
 	next.style.animationName = "sTurn";
