@@ -558,7 +558,7 @@ function pauseAnimation() {
 	play.style.display = "inline";
 }
 function nextAnimation() {
-	if (next.style.display == "inline") {
+	if (player.style.display == "inline") {
 		window.onresize();
 		next.style.animationName = "sTurn";
 		next.style.animationDuration = "0.2s";
