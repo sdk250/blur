@@ -24,7 +24,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 4.2;
+dark.selectId("test").innerText = 4.3;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -186,7 +186,9 @@ const get = () => {
 	that.xhr.dataType = "json";
 	that.xhr.responseType = "json";
 	that.xhr.onload = (res) => {
-		that.cache[window.Object.keys(that.cache).length] = {id: /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1]};
+		that.cache[window.Object.keys(that.cache).length] = {
+			id: /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1]
+		};
 		that.playerState = false;
 		that.xhr.open("POST", "https://sdk250.cn/api/id", true);
 		that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -556,11 +558,14 @@ function pauseAnimation() {
 	play.style.display = "inline";
 }
 function nextAnimation() {
-	next.style.animationName = "sTurn";
-	next.style.animationDuration = "0.2s";
-	next.style.animationTimingFunction = "linear";
-	next.style.animationIterationCount = 6;
-	next.style.animationDirection = "alternate";
+	if (next.style.display == "inline") {
+		window.onresize();
+		next.style.animationName = "sTurn";
+		next.style.animationDuration = "0.2s";
+		next.style.animationTimingFunction = "linear";
+		next.style.animationIterationCount = 6;
+		next.style.animationDirection = "alternate";
+	}
 }
 function musicNameAnimation() {
 	document.getElementById("mName").style.animationName = "wordsLoop";
