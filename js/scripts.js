@@ -18,7 +18,6 @@ var player,
 	sPic,
 	searchText,
 	searchContent,
-	searchContentBackground,
 	currentLine,
 	audio,
 	musicInfo;
@@ -39,9 +38,7 @@ __eul = dark.selectId("lrc");
 search = dark.selectId("search");
 sPic = dark.selectId("searchPic");
 searchText = dark.selectId("searchText");
-// searchBackground = dark.selectId("searchBackground");
 searchContent = dark.selectId("searchContent");
-searchContentBackground = dark.selectId("searchContentBackground");
 lrcBackground = dark.selectId("lrcBackground");
 
 
@@ -113,6 +110,29 @@ searchText.onfocus = function() {
 	if (that.searchTimer) {
 		clearTimeout(that.searchTimer);
 	}
+	searchText.onkeydown = (event) => {
+		if (event.keyCode == 13) {
+			that.xhr.open("POST", "https://sdk250.cn/api/id", true);
+			that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			that.xhr.dataType = "json";
+			that.xhr.responseType = "json";
+			that.xhr.onload = (res) => {
+				if (res.currentTarget.response.data == null) {
+					console.log("The current song has no copyright, Please next song.");
+					that.playerState = true;
+					Next();
+					return false;
+				}
+				that.cache[that.playCode].data = res.currentTarget.response.data;
+				that.cache[that.playCode].name = res.currentTarget.response.name;
+				that.cache[that.playCode].picture = res.currentTarget.response.picture;
+				that.cache[that.playCode].art = res.currentTarget.response.art;
+				that.cache[that.playCode].lyric = res.currentTarget.response.lyric;
+				playerInitial(that.cache[that.playCode]);
+			};
+			that.xhr.send("key=" + event.target.value);
+		}
+	};
 	/*
 	searchText.onkeydown = function(e){
 		if (e.keyCode == 13) {
@@ -329,9 +349,7 @@ function getMusicPicture(parameter) {
 	that.xhr.responseType = "blob";
 	that.xhr.onload = (response) => {
 		that.cache[that.playCode].picRes = window.URL.createObjectURL(response.currentTarget.response);
-		// document.body.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
 		background.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
-		// background.style.backgroundSize = "50%";
 		picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")"; 
 	};
 	that.xhr.send(null);
@@ -389,22 +407,13 @@ function createLrcObj(lrc) {
 		__eul.appendChild(that.eli);
 	}
 }
-function getMusicLyric(parameter) {
-	rq("GET", "https://api.obfs.dev/api/netease/lyric", {"id": /url\?id\=(\d{3,12})/.exec(parameter.data.url)[1]}, "json", "json", function () {
-		that.cache[that.playCode].data.lryicRes = this.response;
-		if (that.cache[that.playCode].data.lryicRes == true) {
-			createLrcObj("[00:00.00] 纯音乐，请欣赏\n[06:66.66] ");
-		} else {
-			createLrcObj(that.cache[that.playCode].data.lryicRes.lrc.lyric);
-		}
-	});
-}
 searchText.oninput = function(e) {
 	if (e.target.value == "") {
 		searchContent.innerHTML = "";
-		searchContentBackground.style.display = "none";
 		return false;
 	}
+	
+	/*
 	rq("GET", "https://api.obfs.dev/api/netease/search", {"s": e.target.value, "limit": 4}, "json", "json", function() {
 		that.searchResult = this.response;
 		searchContent.innerHTML = "";
@@ -416,7 +425,6 @@ searchText.oninput = function(e) {
 			searchContent.appendChild(that.searchContents);
 			searchContent.appendChild(document.createElement("hr"));
 		}
-		searchContentBackground.style.display = "inline";
 		that.searchContent.children[0].onclick = function() {
 			getMusic(0);
 		};
@@ -444,6 +452,7 @@ searchText.oninput = function(e) {
 			playerInitial(that.cache[window.Object.keys(that.cache).length]);
 		}
 	});
+	*/
 };
 function rq(method, URL, parameter, dataType, responseType, success) {
 	dark.Ajax({
@@ -490,7 +499,6 @@ function unLong() {
 	searchText.style.animationTimingFunction = "ease";
 	searchText.style.animationIterationCount = "1";
 	searchContent.innerHTML = "";
-	searchContentBackground.style.display = "none";
 	searchText.style.display = "none";
 	sPic.style.animationName = "zoomIn";
 	sPic.style.animationDuration = "0.6s";
@@ -500,6 +508,7 @@ function unLong() {
 	that.searchShow = false;
 }
 function cShow() {
+	window.onresize();
 	player.style.animationName = "cShow, zoomOut";
 	player.style.animationDuration = "0.3s, 0.5s";
 	player.style.animationTimingFunction = "linear, linear";
@@ -510,7 +519,6 @@ function cShow() {
 	box.style.animationTimingFunction = "linear. linear";
 	box.style.animationIterationCount = "1, 1";
 	box.style.display = "inline";
-	// lrcBackground.style.display = "inline";
 	box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
 	box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
 	that.lrcShow = true;
@@ -526,7 +534,6 @@ function aShow() {
 	box.style.animationTimingFunction = "linear, linear";
 	box.style.animationIterationCount = "1, 1";
 	box.style.display = "none";
-	// lrcBackground.style.display = "none";
 	player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
 	player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
 	that.lrcShow = false;
@@ -559,7 +566,6 @@ function pauseAnimation() {
 }
 function nextAnimation() {
 	if (player.style.display == "inline") {
-		window.onresize();
 		next.style.animationName = "sTurn";
 		next.style.animationDuration = "0.2s";
 		next.style.animationTimingFunction = "linear";
