@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 4.3;
+dark.selectId("test").innerText = 4.6;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -112,6 +112,9 @@ searchText.onfocus = function() {
 	}
 	searchText.onkeydown = (event) => {
 		if (event.keyCode == 13) {
+			Pause(true);
+			that.playCode++;
+			that.playState = false;
 			that.xhr.open("POST", "https://sdk250.cn/api/id", true);
 			that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 			that.xhr.dataType = "json";
@@ -123,11 +126,14 @@ searchText.onfocus = function() {
 					Next();
 					return false;
 				}
-				that.cache[that.playCode].data = res.currentTarget.response.data;
-				that.cache[that.playCode].name = res.currentTarget.response.name;
-				that.cache[that.playCode].picture = res.currentTarget.response.picture;
-				that.cache[that.playCode].art = res.currentTarget.response.art;
-				that.cache[that.playCode].lyric = res.currentTarget.response.lyric;
+				that.cache[that.playCode] = {
+					id: res.currentTarget.response.id,
+					data: res.currentTarget.response.data,
+					name: res.currentTarget.response.name,
+					picture: res.currentTarget.response.picture,
+					art: res.currentTarget.response.art,
+					lyric: res.currentTarget.response.lyric
+				};
 				playerInitial(that.cache[that.playCode]);
 			};
 			that.xhr.send("key=" + event.target.value);
@@ -206,9 +212,7 @@ const get = () => {
 	that.xhr.dataType = "json";
 	that.xhr.responseType = "json";
 	that.xhr.onload = (res) => {
-		that.cache[window.Object.keys(that.cache).length] = {
-			id: /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1]
-		};
+		let id = /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1];
 		that.playerState = false;
 		that.xhr.open("POST", "https://sdk250.cn/api/id", true);
 		that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -221,14 +225,17 @@ const get = () => {
 				Next();
 				return false;
 			}
-			that.cache[that.playCode].data = res.currentTarget.response.data;
-			that.cache[that.playCode].name = res.currentTarget.response.name;
-			that.cache[that.playCode].picture = res.currentTarget.response.picture;
-			that.cache[that.playCode].art = res.currentTarget.response.art;
-			that.cache[that.playCode].lyric = res.currentTarget.response.lyric;
-			playerInitial(that.cache[that.playCode]);
+			that.cache[window.Object.keys(that.cache).length] = {
+				id: id,
+				data: res.currentTarget.response.data,
+				name: res.currentTarget.response.name,
+				picture: res.currentTarget.response.picture,
+				art: res.currentTarget.response.art,
+				lyric: res.currentTarget.response.lyric
+			};
+			playerInitial(that.cache[window.Object.keys(that.cache).length - 1]);
 		};
-		that.xhr.send("songid=" + that.cache[that.playCode].id);
+		that.xhr.send("songid=" + id);
 	};
 	that.xhr.send(null);
 };
@@ -284,58 +291,57 @@ function Previous() {
 	Pause(true);
 	playerInitial(that.cache[--that.playCode]);
 }
+const init_audio = (url) => {
+	that.playerState = true;
+	audio.src = url;
+	audio.onpause = function() {
+		pauseAnimation();
+		console.log("BEEN PAUSE!");
+	};
+	audio.onplay = function() {
+		playAnimation();
+		console.log("BEEN PLAY!");
+	};
+	audio.onended = function(){
+		Next();
+		console.log("Restart");
+	};
+	if (window.Object.keys(that.cache).length > 1) {
+		audio.oncanplay = function () {
+			audio.play();
+			console.log("AUTO PLAY");
+		};
+	}
+};
+audio.addEventListener("timeupdate", function () {
+	for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
+		if (this.currentTime < oLRC.ms[currentLine + 1].t){
+			currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
+			currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
+			currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
+			currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
+			__eul.children[currentLine].setAttribute("style", "color: white");
+			__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
+			break;
+		}
+	}
+});
 
 function playerInitial(parameter) {
-	let xhr = new window.XMLHttpRequest();
-	xhr.open("GET", that.cache[that.playCode].data, true);
-	xhr.responseType = "blob";
-	xhr.onload = (res) => {
-		that.cache[that.playCode]["res"] = window.URL.createObjectURL(res.currentTarget.response);
-		that.playerState = true;
-		audio.src = that.cache[that.playCode].res;
-		audio.onpause = function() {
-			pauseAnimation();
-			console.log("BEEN PAUSE!");
+	if ("res" in window.Object(parameter)) {
+		init_audio(parameter.res);
+	} else {
+		let xhr = new window.XMLHttpRequest();
+		xhr.open("GET", that.cache[that.playCode].data, true);
+		xhr.responseType = "blob";
+		xhr.onload = (res) => {
+			parameter.res = window.URL.createObjectURL(res.currentTarget.response);
+			init_audio(parameter.res);
 		};
-		audio.onplay = function() {
-			playAnimation();
-			console.log("BEEN PLAY!");
-		};
-		audio.onended = function(){
-			Next();
-			console.log("Restart");
-		};
-		if (window.Object.keys(that.cache).length > 1) {
-			audio.oncanplay = function () {
-				audio.play();
-				console.log("AUTO PLAY");
-			};
-		}
-		audio.addEventListener("timeupdate", function () {
-			for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
-				if (this.currentTime < oLRC.ms[currentLine + 1].t){
-					currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
-					currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
-					currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
-					currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
-					__eul.children[currentLine].setAttribute("style", "color: white");
-					__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
-					break;
-				}
-			}
-		});
-	};
-	xhr.onerror = (err) => {console.log(err);};
-	xhr.send(null);
-	playerInit(parameter);
-	getMusicPicture(parameter);
-	// getMusicURL(parameter);
-	createLrcObj(parameter.lyric);
-	// getMusicLyric(parameter);
-}
-function playerInit(result) {
-	musicInfo.innerHTML = "<p id=\"mName\">" + result.name +
-		"</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + result.art + "</p>";
+		xhr.send(null);
+	}
+	musicInfo.innerHTML = "<p id=\"mName\">" + parameter.name +
+		"</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + parameter.art + "</p>";
 	if (document.getElementById("mName").scrollWidth > musicInfo.clientWidth) {
 		console.log("Text is long.");
 		musicNameAnimation();
@@ -343,16 +349,20 @@ function playerInit(result) {
 		console.log("Text is long.");
 		musicPeoAnimation();
 	}
-}
-function getMusicPicture(parameter) {
-	that.xhr.open("GET", parameter.picture, true);
-	that.xhr.responseType = "blob";
-	that.xhr.onload = (response) => {
-		that.cache[that.playCode].picRes = window.URL.createObjectURL(response.currentTarget.response);
-		background.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
-		picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")"; 
-	};
-	that.xhr.send(null);
+	if ("picRes" in window.Object(parameter)) {
+		background.style.backgroundImage = "url(\"" + parameter.picRes + "\")";
+		picture.style.backgroundImage = "url(\"" + parameter.picRes + "\")"; 
+	} else {
+		that.xhr.open("GET", parameter.picture, true);
+		that.xhr.responseType = "blob";
+		that.xhr.onload = (response) => {
+			that.cache[that.playCode].picRes = window.URL.createObjectURL(response.currentTarget.response);
+			background.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
+			picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")"; 
+		};
+		that.xhr.send(null);
+	}
+	createLrcObj(parameter.lyric);
 }
 function createLrcObj(lrc) {
 	oLRC = null;
@@ -508,7 +518,6 @@ function unLong() {
 	that.searchShow = false;
 }
 function cShow() {
-	window.onresize();
 	player.style.animationName = "cShow, zoomOut";
 	player.style.animationDuration = "0.3s, 0.5s";
 	player.style.animationTimingFunction = "linear, linear";
@@ -537,6 +546,7 @@ function aShow() {
 	player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
 	player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
 	that.lrcShow = false;
+	window.onresize();
 }
 function playAnimation() {
 	picture.style.animationPlayState = "running";
