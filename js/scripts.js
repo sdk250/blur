@@ -328,7 +328,6 @@ audio.addEventListener("timeupdate", function () {
 });
 
 function playerInitial(parameter) {
-	if (parameter
 	if ("res" in window.Object(parameter)) {
 		init_audio(parameter.res);
 	} else {
