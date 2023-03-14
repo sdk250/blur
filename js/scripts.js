@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 4.7;
+dark.selectId("test").innerText = 4.8;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -577,7 +577,7 @@ function pauseAnimation() {
 	play.style.display = "inline";
 }
 function nextAnimation() {
-	if (player.style.display == "inline") {
+	if (player.style.display != "none") {
 		next.style.animationName = "sTurn";
 		next.style.animationDuration = "0.2s";
 		next.style.animationTimingFunction = "linear";
