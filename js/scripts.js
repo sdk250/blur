@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 4.6;
+dark.selectId("test").innerText = 4.7;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -233,7 +233,7 @@ const get = () => {
 				art: res.currentTarget.response.art,
 				lyric: res.currentTarget.response.lyric
 			};
-			playerInitial(that.cache[window.Object.keys(that.cache).length - 1]);
+			playerInitial(that.cache[that.playCode]);
 		};
 		that.xhr.send("songid=" + id);
 	};
@@ -328,11 +328,12 @@ audio.addEventListener("timeupdate", function () {
 });
 
 function playerInitial(parameter) {
+	if (parameter
 	if ("res" in window.Object(parameter)) {
 		init_audio(parameter.res);
 	} else {
 		let xhr = new window.XMLHttpRequest();
-		xhr.open("GET", that.cache[that.playCode].data, true);
+		xhr.open("GET", parameter.data, true);
 		xhr.responseType = "blob";
 		xhr.onload = (res) => {
 			parameter.res = window.URL.createObjectURL(res.currentTarget.response);
@@ -356,9 +357,9 @@ function playerInitial(parameter) {
 		that.xhr.open("GET", parameter.picture, true);
 		that.xhr.responseType = "blob";
 		that.xhr.onload = (response) => {
-			that.cache[that.playCode].picRes = window.URL.createObjectURL(response.currentTarget.response);
-			background.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")";
-			picture.style.backgroundImage = "url(\"" + that.cache[that.playCode].picRes + "\")"; 
+			parameter.picRes = window.URL.createObjectURL(response.currentTarget.response);
+			background.style.backgroundImage = "url(\"" + parameter.picRes + "\")";
+			picture.style.backgroundImage = "url(\"" + parameter.picRes + "\")"; 
 		};
 		that.xhr.send(null);
 	}
