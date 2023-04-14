@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 4.8;
+dark.selectId("test").innerText = 5.0;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -291,9 +291,30 @@ function Previous() {
 	Pause(true);
 	playerInitial(that.cache[--that.playCode]);
 }
-const init_audio = (url) => {
+audio.addEventListener("timeupdate", function () {
+	for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
+		if (this.currentTime < oLRC.ms[currentLine + 1].t){
+			currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
+			currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
+			currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
+			currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
+			__eul.children[currentLine].setAttribute("style", "color: white");
+			__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
+			break;
+		}
+	}
+});
+function playerInitial(parameter) {
+	if (parameter == null)
+		that.playCode--;
 	that.playerState = true;
-	audio.src = url;
+	if ("res" in window.Object(parameter))
+		audio.src = parameter.res;
+	else
+		audio.src = parameter.data;
+	audio.onloaded = () => {
+		parameter.res = window.URL.createObjectURL(audio.src);
+	};
 	audio.onpause = function() {
 		pauseAnimation();
 		console.log("BEEN PAUSE!");
@@ -311,36 +332,6 @@ const init_audio = (url) => {
 			audio.play();
 			console.log("AUTO PLAY");
 		};
-	}
-};
-audio.addEventListener("timeupdate", function () {
-	for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
-		if (this.currentTime < oLRC.ms[currentLine + 1].t){
-			currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
-			currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
-			currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
-			currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
-			__eul.children[currentLine].setAttribute("style", "color: white");
-			__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
-			break;
-		}
-	}
-});
-
-function playerInitial(parameter) {
-	if (parameter == null)
-		that.playCode--;
-	if ("res" in window.Object(parameter)) {
-		init_audio(parameter.res);
-	} else {
-		let xhr = new window.XMLHttpRequest();
-		xhr.open("GET", parameter.data, true);
-		xhr.responseType = "blob";
-		xhr.onload = (res) => {
-			parameter.res = window.URL.createObjectURL(res.currentTarget.response);
-			init_audio(parameter.res);
-		};
-		xhr.send(null);
 	}
 	musicInfo.innerHTML = "<p id=\"mName\">" + parameter.name +
 		"</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + parameter.art + "</p>";
