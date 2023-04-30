@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 5.0;
+dark.selectId("test").innerText = 5.1;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -333,6 +333,7 @@ function playerInitial(parameter) {
 			console.log("AUTO PLAY");
 		};
 	}
+	dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
 	musicInfo.innerHTML = "<p id=\"mName\">" + parameter.name +
 		"</p>" + "<p id=\"mPeo\" style=\"font-size: 10px;\">" + parameter.art + "</p>";
 	if (document.getElementById("mName").scrollWidth > musicInfo.clientWidth) {
