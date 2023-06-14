@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 5.1;
+dark.selectId("test").innerText = 5.4;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -298,7 +298,8 @@ audio.addEventListener("timeupdate", function () {
 			currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
 			currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
 			currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
-			__eul.children[currentLine].setAttribute("style", "color: white");
+			__eul.children[currentLine].style.color = "white";
+			__eul.children[currentLine].style.fontSize = "110%";
 			__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
 			break;
 		}
@@ -407,6 +408,8 @@ function createLrcObj(lrc) {
 	__eul.innerHTML = "";
 	for (var i in oLRC.ms) {
 		that.eli = document.createElement("li");
+		that.eli.style.fontSize = "100%";
+		that.eli.style.opacity = 0.8;
 		that.eli.innerText = oLRC.ms[i].c;
 		__eul.appendChild(that.eli);
 	}
