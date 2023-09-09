@@ -22,7 +22,7 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '5.7.6';
+dark.selectId("test").innerText = '5.7.7';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -139,6 +139,7 @@ searchin.onblur = (event) => {
 }
 searchin.onfocus = (event) => {
     window.onkeydown = null;
+    searchin.select();
 }
 searchin.onkeydown = (event) => {
     if (event.keyCode == 13) {
