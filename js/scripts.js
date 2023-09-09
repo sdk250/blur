@@ -143,6 +143,7 @@ searchin.onfocus = (event) => {
 }
 searchin.onkeydown = (event) => {
     if (event.keyCode == 13) {
+        searchin.blur();
         Pause();
         that.playState = false;
         that.xhr.open("POST", "https://sdk250.cn/api/id", true);
