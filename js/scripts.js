@@ -23,7 +23,7 @@ var player,
 	musicInfo;
 
 dark = new Dark();
-dark.selectId("test").innerText = 5.4;
+dark.selectId("test").innerText = 5.7;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -205,6 +205,10 @@ play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
 picture.addEventListener("click", Previous);
+next.addEventListener("animationend", function () {
+	next.style.animationName = "none";
+	console.log("Next animation is end.");
+});
 
 const get = () => {
 	that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
@@ -259,7 +263,7 @@ function Pause(bool) {
 		return false;
 	}
 	if (bool == true) {
-		audio.src = null;
+		// audio.src = null;
 	}
 }
 function Next() {
@@ -278,10 +282,6 @@ function Next() {
 	Pause(true);
 	that.playerState = false;
 	nextAnimation();
-	next.addEventListener("animationend", function () {
-		next.style.animationName = "none";
-		console.log("Next animation is end.");
-	});
 }
 function Previous() {
 	if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
@@ -299,7 +299,7 @@ audio.addEventListener("timeupdate", function () {
 			currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
 			currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
 			__eul.children[currentLine].style.color = "white";
-			__eul.children[currentLine].style.fontSize = "110%";
+			__eul.children[currentLine].style.fontSize = "140%";
 			__eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
 			break;
 		}

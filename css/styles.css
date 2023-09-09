@@ -118,6 +118,7 @@ body {
 }
 #lrc {
 	color: rgb(126, 126, 126);
+	font-size: 160%;
 	transition-duration: 800ms;
 }
 #search {
