@@ -133,6 +133,7 @@ body {
 #lrc {
 	color: rgb(126, 126, 126);
 	font-size: 160%;
+	list-style: none;
 	transition-duration: 800ms;
 }
 #copyright {
