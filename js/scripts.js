@@ -39,6 +39,10 @@ box = dark.selectId("box");
 __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
 
+if (window.navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
+else
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
 
 this.cache = [];
 
@@ -234,6 +238,8 @@ function Next() {
     get();
     Pause();
     that.playState = false;
+    mName.style.animationName = null;
+    mPeo.style.animationName = null;
     if (!that.lrcShow)
         nextAnimation();
 }
@@ -262,7 +268,7 @@ function playerInitial(parameter) {
     mPeo.innerText = parameter.art;
     if (mName.scrollWidth > musicInfo.clientWidth)
         musicNameAnimation(); // Text is too long.
-    else if (mPeo.scrollWidth > musicInfo.clientWidth)
+    if (mPeo.scrollWidth > musicInfo.clientWidth)
         musicPeoAnimation();
     if (typeof(parameter.picRes) == "undefined") {
         that.xhr.open("GET", parameter.picture, true);
