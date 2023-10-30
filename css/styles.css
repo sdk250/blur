@@ -98,10 +98,10 @@ body {
 	z-index: 4;
 }
 #musicInfo #mName {
-    font-size: 140%;
+    font-size: 160%;
 }
 #musicInfo #mPeo {
-    font-size: 100%;
+    font-size: 130%;
 }
 #musicInfo #searchin {
     display: none;
