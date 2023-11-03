@@ -22,7 +22,7 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '5.8.0';
+dark.selectId("test").innerText = '5.9.4';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -51,6 +51,9 @@ this.playState = false;
 
 /* init Onplay code */
 this.playCode = 0;
+
+this.longPress = null;
+this.isFullscreen = false;
 
 player.style.borderRadius = "15px 50px 30px 5px";
 
@@ -92,11 +95,30 @@ background.onclick = () => {
     }
 };
 lrcBackground.onclick = background.onclick;
-
 play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
 picture.addEventListener("click", Previous);
+picture.addEventListener("touchstart", (event) => {
+    that.timer = setTimeout(() => {
+        if (that.isFullscreen) {
+            window.document.exitFullscreen();
+            that.isFullscreen = false;
+        } else {
+            window.document.documentElement.requestFullscreen();
+            that.isFullscreen = true;
+        }
+    }, 500);
+    that.startTime = +new Date();
+});
+picture.addEventListener("touchmove", () => {
+    clearTimeout(that.timer);
+});
+picture.addEventListener("touchend", () => {
+    clearTimeout(that.timer);
+    if (+new Date() - that.startTime < 500)
+        Previous();
+});
 next.addEventListener("animationend", function () {
     next.style.animationName = "none";
 });
@@ -150,6 +172,11 @@ searchin.onkeydown = (event) => {
         searchin.blur();
         Pause();
         that.playState = false;
+        // https://music.163.com/song?id=28302912
+        if ("闹够了没有" == event.target.value) {
+            internal_music(event.target.value, "赖伟锋", "28302912", "https://p2.music.126.net/KLh4hXNSFK8y96ahPda5fQ==/5940661324986386.jpg")
+            return;
+        }
         that.xhr.open("POST", "https://sdk250.cn/api/id", true);
         that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         that.xhr.dataType = "json";
@@ -251,7 +278,30 @@ function Previous() {
     Pause();
     playerInitial(that.cache[--that.playCode]);
 }
+function internal_music(name, art, id, picture) {
+    let music = art + " - " + name
+    that.xhr.open("GET", "./music/" + music + ".lrc");
+    that.xhr.dataType = "text";
+    that.xhr.responseType = "text";
+    that.xhr.onload = (event) => {
+        that.cache[++that.playCode] = {
+            id: id,
+            data: "../music/" + music + ".flac",
+            name: name,
+            picture: picture,
+            art: art,
+            lyric: event.currentTarget.responseText
+        };
+        playerInitial(that.cache[that.playCode]);
+    };
+    that.xhr.onerror = () => {
+        console.log("INTERNAL ERROR.");
+    };
+    that.xhr.send(null);
+}
 function playerInitial(parameter) {
+    if (!parameter)
+        return;
     if (typeof(parameter.res) == "undefined")
         audio.src = parameter.data;
     else
