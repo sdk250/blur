@@ -22,7 +22,7 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '5.9.4';
+dark.selectId("test").innerText = '5.9.5';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -280,13 +280,13 @@ function Previous() {
 }
 function internal_music(name, art, id, picture) {
     let music = art + " - " + name
-    that.xhr.open("GET", "./music/" + music + ".lrc");
+    that.xhr.open("GET", "music/" + music + ".lrc");
     that.xhr.dataType = "text";
     that.xhr.responseType = "text";
     that.xhr.onload = (event) => {
         that.cache[++that.playCode] = {
             id: id,
-            data: "../music/" + music + ".flac",
+            data: "music/" + music + ".flac",
             name: name,
             picture: picture,
             art: art,
