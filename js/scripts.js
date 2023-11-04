@@ -248,7 +248,7 @@ const get = () => {
     };
     that.xhr.send(null);
 };
-// get();
+get();
 
 function Play() {
     if (that.playState == true)
