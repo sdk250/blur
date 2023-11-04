@@ -11,6 +11,9 @@ body {
     background-size: 150%;
 
 }*/
+body {
+    background-repeat: no-repeat;
+}
 #background {
     position: absolute;
     width: 100%;
