@@ -6,6 +6,7 @@ var player,
     background,
     bottom,
     picture,
+    lock,
     play,
     pause,
     next,
@@ -22,12 +23,13 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '5.9.5';
+dark.selectId("test").innerText = '6.0.1';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
 bottom = dark.selectId("bottom");
 picture = dark.selectId("picture");
+lock = dark.selectId("lock");
 play = dark.selectId("play");
 pause = dark.selectId("pause");
 next = dark.selectId("next");
@@ -52,7 +54,6 @@ this.playState = false;
 /* init Onplay code */
 this.playCode = 0;
 
-this.longPress = null;
 this.isFullscreen = false;
 
 player.style.borderRadius = "15px 50px 30px 5px";
@@ -80,6 +81,7 @@ window.onresize = function () {
     box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
     box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
     picture.style.height = picture.offsetWidth + "px";
+    lock.style.width = lock.style.height = picture.style.height;
     console.log("chenge!");
 };
 window.onresize();
@@ -98,29 +100,36 @@ lrcBackground.onclick = background.onclick;
 play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
-picture.addEventListener("click", Previous);
-picture.addEventListener("touchstart", (event) => {
-    that.timer = setTimeout(() => {
-        if (that.isFullscreen) {
-            window.document.exitFullscreen();
-            that.isFullscreen = false;
-        } else {
-            window.document.documentElement.requestFullscreen();
-            that.isFullscreen = true;
-        }
-    }, 500);
-    that.startTime = +new Date();
-});
-picture.addEventListener("touchmove", () => {
+// picture.addEventListener("click", Previous);
+lock.addEventListener("touchstart", LongPress);
+// lock.addEventListener("touchmove", () => {
+//     clearTimeout(that.timer);
+// });
+lock.addEventListener("touchend", () => {
     clearTimeout(that.timer);
-});
-picture.addEventListener("touchend", () => {
-    clearTimeout(that.timer);
-    if (+new Date() - that.startTime < 500)
+    if (+new Date() - that.startTime < 500) {
         Previous();
+        lock.style.animationName = null;
+    }
 });
-next.addEventListener("animationend", function () {
-    next.style.animationName = "none";
+lock.addEventListener("mousedown", LongPress);
+// lock.addEventListener("mousemove", () => {
+//     clearTimeout(that.timer);
+//     console.log("UNSET 1");
+//     lock.style.animationName = null;
+// });
+lock.addEventListener("mouseup", () => {
+    clearTimeout(that.timer);
+    if (+new Date() - that.startTime < 600) {
+        Previous();
+        lock.style.animationName = null;
+    }
+});
+lock.addEventListener("animationend", () => {
+    lock.style.animationName = null;
+});
+next.addEventListener("animationend", () => {
+    next.style.animationName = null;
 });
 audio.onpause = function() {
     pauseAnimation();
@@ -239,7 +248,7 @@ const get = () => {
     };
     that.xhr.send(null);
 };
-get();
+// get();
 
 function Play() {
     if (that.playState == true)
@@ -277,6 +286,27 @@ function Previous() {
     }
     Pause();
     playerInitial(that.cache[--that.playCode]);
+}
+function LongPress() {
+    that.startTime = +new Date();
+    lock.style.animationName = "lock";
+    lock.style.animationDuration = "0.6s";
+    lock.style.animationTimingFunction = "ease-in";
+    if (audio.loop)
+        lock.style.animationDirection = "reverse";
+    else
+        lock.style.animationDirection = "normal";
+    lock.style.animationIterationCount = "1";
+
+    that.timer = setTimeout(() => {
+        if (audio.loop) {
+            audio.loop = false;
+            lock.style.borderColor = "transparent";
+        } else {
+            audio.loop = true;
+            lock.style.borderColor = "rgb(175, 175, 175)";
+        }
+    }, 500);
 }
 function internal_music(name, art, id, picture) {
     let music = art + " - " + name
