@@ -186,7 +186,7 @@ searchin.onkeydown = (event) => {
             internal_music(event.target.value, "赖伟锋", "28302912", "https://p2.music.126.net/KLh4hXNSFK8y96ahPda5fQ==/5940661324986386.jpg")
             return;
         }
-        that.xhr.open("POST", "https://sdk250.cn/api/id", true);
+        that.xhr.open("POST", "https://sdk250.cn/api/key", true);
         that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         that.xhr.dataType = "json";
         that.xhr.responseType = "json";
@@ -369,9 +369,11 @@ function playerInitial(parameter) {
 }
 function createLrcObj(lrc) {
     oLRC = null;
-    if(lrc.length == 0)
+    if (lrc.length == 0)
         return;
-    var lrcs = lrc.split('\n');
+    let lrcs = []
+    for (let i of lrc)
+        lrcs.push(i.split('\n'));
     oLRC = {
         ti: "",
         ar: "",
@@ -381,46 +383,63 @@ function createLrcObj(lrc) {
         ms: []
     };
     currentLine = 0;
-    for(var i in lrcs) {
-        lrcs[i] = lrcs[i].replace(/(^\s*)|(\s*$)/g, "");
-        var t = lrcs[i].substring(lrcs[i].indexOf("[") + 1, lrcs[i].indexOf("]"));
-        var s = t.split(":");
-        if (isNaN(parseInt(s[0]))) {
-            for (var i in oLRC) {
-                if (i != "ms" && i == s[0].toLowerCase()) {
-                    oLRC[i] = s[1];
+    for (let i of lrcs)
+    {
+        for (let j of i)
+        {
+            j = j.replace(/(^\s*)|(\s*$)/g, "");
+            let t = j.substring(j.indexOf("[") + 1, j.indexOf("]"));
+            let s = t.split(":");
+            if (isNaN(parseInt(s[0])))
+            {
+                for (let i in oLRC)
+                    if (i != "ms" && i == s[0].toLowerCase())
+                        oLRC[i] = s[1];
+            } else {
+                let arr = j.match(/\[(\d+:.+?)\]/g);
+                let start = 0;
+                for(let k of arr)
+                    start += k.length;
+                let content = j.substring(start);
+                for (let k of arr) {
+                    let t = k.substring(1, k.length-1);
+                    let s = t.split(":");
+                    let r = (parseFloat(s[0]) * 60 + parseFloat(s[1])).toFixed(3);
+                    let q = false;
+                    for (let l of oLRC.ms)
+                    {
+                        if (l.t == r)
+                        {
+                            q = true;
+                            l.c += '\n' + content;
+                        }
+                    }
+                    if (q)
+                        continue;
+                    oLRC.ms.push({
+                        t: r,
+                        c: content
+                    });
                 }
-            }
-        } else {
-            var arr = lrcs[i].match(/\[(\d+:.+?)\]/g);
-            var start = 0;
-            for(var k in arr) {
-                start += arr[k].length;
-            }
-            var content = lrcs[i].substring(start);
-            for (var k in arr) {
-                var t = arr[k].substring(1, arr[k].length-1);
-                var s = t.split(":");
-                oLRC.ms.push({
-                    t: (parseFloat(s[0])*60+parseFloat(s[1])).toFixed(3),
-                    c: content
-                });
             }
         }
     }
-    oLRC.ms[(window.Object.keys(oLRC.ms).length)] = {
-        "t": (window.Math.floor(oLRC.ms[(window.Object.keys(oLRC.ms).length - 1)].t) + 3),
+    oLRC.ms[oLRC.ms.length] = {
+        "t": (window.parseFloat(oLRC.ms[oLRC.ms.length - 1].t) + 3).toString(),
         "c": ""
     };
+ 
     console.log(oLRC.ms.length);
     __eul.innerHTML = "";
-    for (var i in oLRC.ms) {
+    for (let i of oLRC.ms)
+    {
         that.eli = document.createElement("li");
         that.eli.style.fontSize = "100%";
         that.eli.style.opacity = 0.8;
-        that.eli.innerText = oLRC.ms[i].c;
+        that.eli.innerText = i.c;
         __eul.appendChild(that.eli);
     }
+    
 }
 
 function rq(method, URL, parameter, dataType, responseType, success) {
