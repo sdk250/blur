@@ -40,11 +40,93 @@ searchin = dark.selectId("searchin");
 box = dark.selectId("box");
 __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
+const get = () => {
+    that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
+    that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    that.xhr.dataType = "json";
+    that.xhr.responseType = "json";
+    that.xhr.onload = (res) => {
+        let id = /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1];
+        that.playState = false;
+        that.xhr.open("POST", "https://sdk250.cn/api/id", true);
+        that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        that.xhr.dataType = "json";
+        that.xhr.responseType = "json";
+        that.xhr.onload = (res) => {
+            let data = res.currentTarget.response;
+            if (data.data == null) {
+                console.log("The current song has no copyright, Please next song.");
+                Next();
+                return false;
+            }
+            that.cache[window.Object.keys(that.cache).length] = {
+                id: id,
+                data: data.data,
+                name: data.name,
+                picture: data.picture,
+                art: data.art,
+                lyric: data.lyric
+            };
+            playerInitial(that.cache[that.playCode]);
+        };
+        that.xhr.send("songid=" + id);
+    };
+    that.xhr.send(null);
+};
 
 if (window.navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))
     window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
 else
     window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
+
+(function guide() {
+    for (let i of document.cookie.split(';'))
+    {
+        let date = new Date();
+        if (i.split('=')[0].indexOf('visited') != -1)
+        {
+            lrcBackground.onclick = background.onclick = () => {
+                if (that.lrcShow == false) {
+                    cShow();
+                } else if (that.lrcShow == true) {
+                    aShow();
+                } else {
+                    console.error("lrcShow Error!");
+                }
+            };
+            get();
+            break;
+        } else {
+            date.setTime(date.getTime() + 180 * 24 * 60 * 60 * 1000);
+            document.cookie = 'visited=true;';
+            document.cookie = 'expires=' + date.toUTCString() + ';';
+            let i = 0;
+            lrcBackground.onclick = background.onclick = () => {
+                play.style.border = next.style.border = picture.style.border = mName.style.border = 'none';
+                play.innerText = next.innerText = picture.innerText = mName.innerText = '';
+                switch(++i > 3 ? guide() : i)
+                {
+                    case 0:
+                        play.style.border = "solid red";
+                        play.innerHTML = '<p style="color: white;">点击此处开始播放</p>';
+                        break;
+                    case 1:
+                        next.style.border = "solid red";
+                        next.innerHTML = '<p style="color: white;">点击此处下一曲</p>';
+                        break;
+                    case 2:
+                        picture.style.border = "solid red";
+                        picture.innerHTML = '<p style="color: white;">点击此处上一曲 / 长按可以单曲循环</p>';
+                        break;
+                    case 3:
+                        mName.style.border = "solid red";
+                        mName.innerHTML = '<p style="color: white;">点击编辑歌名回车搜索歌曲</p>';
+                        break;
+                }
+            };
+        }
+    }
+})();
 
 this.cache = [];
 
@@ -87,16 +169,6 @@ window.onresize = function () {
 window.onresize();
 
 this.lrcShow = false;
-background.onclick = () => {
-    if (that.lrcShow == false) {
-        cShow();
-    } else if (that.lrcShow == true) {
-        aShow();
-    } else {
-        console.error("lrcShow Error!");
-    }
-};
-lrcBackground.onclick = background.onclick;
 play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
@@ -213,42 +285,6 @@ searchin.onkeydown = (event) => {
         that.xhr.send("key=" + event.target.value);
     }
 };
-
-
-const get = () => {
-    that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
-    that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    that.xhr.dataType = "json";
-    that.xhr.responseType = "json";
-    that.xhr.onload = (res) => {
-        let id = /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1];
-        that.playState = false;
-        that.xhr.open("POST", "https://sdk250.cn/api/id", true);
-        that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        that.xhr.dataType = "json";
-        that.xhr.responseType = "json";
-        that.xhr.onload = (res) => {
-            let data = res.currentTarget.response;
-            if (data.data == null) {
-                console.log("The current song has no copyright, Please next song.");
-                Next();
-                return false;
-            }
-            that.cache[window.Object.keys(that.cache).length] = {
-                id: id,
-                data: data.data,
-                name: data.name,
-                picture: data.picture,
-                art: data.art,
-                lyric: data.lyric
-            };
-            playerInitial(that.cache[that.playCode]);
-        };
-        that.xhr.send("songid=" + id);
-    };
-    that.xhr.send(null);
-};
-get();
 
 function Play() {
     if (that.playState == true)

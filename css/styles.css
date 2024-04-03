@@ -13,7 +13,9 @@ body {
 }*/
 body {
     background-repeat: no-repeat;
-    background-size: 150%;
+    background-position: center center;
+    background-size: 550%;
+    overflow: hidden;
 }
 #background {
     position: absolute;
@@ -22,7 +24,8 @@ body {
     background-image: url(../img/0.jpg);
     background-repeat: no-repeat;
     background-position: center center;
-    background-size: 350%;
+    background-size: cover;
+    overflow: hidden;
     filter: blur(40px);
     z-index: 0;
 }
