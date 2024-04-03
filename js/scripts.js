@@ -23,7 +23,7 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '6.0.1';
+dark.selectId("test").innerText = '6.2.0';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
