@@ -23,7 +23,7 @@ var player,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '6.2.0';
+dark.selectId("test").innerText = '6.2.9';
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -74,57 +74,54 @@ const get = () => {
     that.xhr.send(null);
 };
 
-if (window.navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))
+if (window.navigator.userAgent.match(
+    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+))
     window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
 else
     window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
 
 (function guide() {
-    for (let i of document.cookie.split(';'))
+    let visited = window.localStorage.getItem('visited');
+    if (visited)
     {
-        let date = new Date();
-        if (i.split('=')[0].indexOf('visited') != -1)
-        {
-            lrcBackground.onclick = background.onclick = () => {
-                if (that.lrcShow == false) {
-                    cShow();
-                } else if (that.lrcShow == true) {
-                    aShow();
-                } else {
-                    console.error("lrcShow Error!");
-                }
-            };
-            get();
-            break;
-        } else {
-            date.setTime(date.getTime() + 180 * 24 * 60 * 60 * 1000);
-            document.cookie = 'visited=true;';
-            document.cookie = 'expires=' + date.toUTCString() + ';';
-            let i = 0;
-            lrcBackground.onclick = background.onclick = () => {
-                play.style.border = next.style.border = picture.style.border = mName.style.border = 'none';
-                play.innerText = next.innerText = picture.innerText = mName.innerText = '';
-                switch(++i > 3 ? guide() : i)
-                {
-                    case 0:
-                        play.style.border = "solid red";
-                        play.innerHTML = '<p style="color: white;">点击此处开始播放</p>';
-                        break;
-                    case 1:
-                        next.style.border = "solid red";
-                        next.innerHTML = '<p style="color: white;">点击此处下一曲</p>';
-                        break;
-                    case 2:
-                        picture.style.border = "solid red";
-                        picture.innerHTML = '<p style="color: white;">点击此处上一曲 / 长按可以单曲循环</p>';
-                        break;
-                    case 3:
-                        mName.style.border = "solid red";
-                        mName.innerHTML = '<p style="color: white;">点击编辑歌名回车搜索歌曲</p>';
-                        break;
-                }
-            };
-        }
+        lrcBackground.onclick = background.onclick = () => {
+            if (that.lrcShow == false) {
+                cShow();
+            } else if (that.lrcShow == true) {
+                aShow();
+            } else {
+                console.error("lrcShow Error!");
+            }
+        };
+        get();
+    } else {
+        let i = 0;
+        lrcBackground.onclick = background.onclick = () => {
+            play.style.border = next.style.border = picture.style.border = mName.style.border = 'none';
+            play.innerText = next.innerText = picture.innerText = mName.innerText = '';
+            switch(++i > 4 ? guide() : i)
+            {
+                case 1:
+                    play.style.border = "solid red";
+                    play.innerHTML = '<p style="color: white;">点击此处开始播放</p>';
+                    break;
+                case 2:
+                    next.style.border = "solid red";
+                    next.innerHTML = '<p style="color: white;">点击此处下一曲</p>';
+                    break;
+                case 3:
+                    picture.style.border = "solid red";
+                    picture.innerHTML = '<p style="color: white;">点击此处上一曲 / 长按可以单曲循环</p>';
+                    break;
+                case 4:
+                    mName.style.border = "solid red";
+                    mName.innerHTML = '<p style="color: white;">点击编辑歌名回车搜索歌曲</p>';
+                    break;
+            }
+        };
+        background.onclick();
+        window.localStorage.setItem('visited', true);
     }
 })();
 
@@ -255,7 +252,12 @@ searchin.onkeydown = (event) => {
         that.playState = false;
         // https://music.163.com/song?id=28302912
         if ("闹够了没有" == event.target.value) {
-            internal_music(event.target.value, "赖伟锋", "28302912", "https://p2.music.126.net/KLh4hXNSFK8y96ahPda5fQ==/5940661324986386.jpg")
+            internal_music(
+                event.target.value,
+                "赖伟锋",
+                "28302912",
+                "https://p2.music.126.net/KLh4hXNSFK8y96ahPda5fQ==/5940661324986386.jpg"
+            )
             return;
         }
         that.xhr.open("POST", "https://sdk250.cn/api/key", true);
@@ -310,8 +312,6 @@ function Next() {
     get();
     Pause();
     that.playState = false;
-    mName.style.animationName = null;
-    mPeo.style.animationName = null;
     if (!that.lrcShow)
         nextAnimation();
 }
@@ -379,28 +379,24 @@ function playerInitial(parameter) {
             console.log("AUTO PLAY");
         };
     }
+
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
+
     mName.innerText = parameter.name;
     mPeo.innerText = parameter.art;
     if (mName.scrollWidth > musicInfo.clientWidth)
         musicNameAnimation(); // Text is too long.
+    else
+        mName.style.animationName = null;
     if (mPeo.scrollWidth > musicInfo.clientWidth)
         musicPeoAnimation();
-    if (typeof(parameter.picRes) == "undefined") {
-        that.xhr.open("GET", parameter.picture, true);
-        that.xhr.responseType = "blob";
-        that.xhr.onload = (response) => {
-            parameter.picRes = window.URL.createObjectURL(response.currentTarget.response);
-            window.document.getElementsByTagName("body")[0].style.backgroundImage = "url(\"" + parameter.picRes + "\")";
-            background.style.backgroundImage = "url(\"" + parameter.picRes + "\")";
-            picture.style.backgroundImage = "url(\"" + parameter.picRes + "\")"; 
-        };
-        that.xhr.send(null);
-    } else {
-        window.document.getElementsByTagName("body")[0].style.backgroundImage = "url(\"" + parameter.picRes + "\")";
-        background.style.backgroundImage = "url(\"" + parameter.picRes + "\")";
-        picture.style.backgroundImage = "url(\"" + parameter.picRes + "\")"; 
-    }
+    else
+        mPeo.style.animationName = null;
+
+    background.style.backgroundImage = 
+        window.document.getElementsByTagName("body")[0].style.backgroundImage = 
+        picture.style.backgroundImage = "url(\"" + parameter.picture + "\")"; 
+
     createLrcObj(parameter.lyric);
 }
 function createLrcObj(lrc) {
