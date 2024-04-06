@@ -24,7 +24,7 @@ var player,
     searchin;
 
 dark = new Dark();
-version = dark.selectId("test").innerText;
+version = dark.selectId("test");
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -122,8 +122,7 @@ else
 })();
 
 /* Version code */
-version = '6.4.0';
-window.console.log(version);
+window.console.log(version.innerText = '6.4.1');
 
 this.cache = [];
 
