@@ -20,10 +20,11 @@ var player,
     musicInfo,
     mName,
     mPeo,
+    version,
     searchin;
 
 dark = new Dark();
-dark.selectId("test").innerText = '6.2.9';
+version = dark.selectId("test").innerText;
 audio = new window.Audio();
 background = dark.selectId("background");
 player = dark.selectId("player");
@@ -54,11 +55,6 @@ const get = () => {
         that.xhr.responseType = "json";
         that.xhr.onload = (res) => {
             let data = res.currentTarget.response;
-            if (data.data == null) {
-                console.log("The current song has no copyright, Please next song.");
-                Next();
-                return false;
-            }
             that.cache[window.Object.keys(that.cache).length] = {
                 id: id,
                 data: data.data,
@@ -125,6 +121,10 @@ else
     }
 })();
 
+/* Version code */
+version = '6.4.0';
+window.console.log(version);
+
 this.cache = [];
 
 /* Init play state */
@@ -161,7 +161,6 @@ window.onresize = function () {
     box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
     picture.style.height = picture.offsetWidth + "px";
     lock.style.width = lock.style.height = picture.style.height;
-    console.log("chenge!");
 };
 window.onresize();
 
@@ -266,11 +265,6 @@ searchin.onkeydown = (event) => {
         that.xhr.responseType = "json";
         that.xhr.onload = (res) => {
             let data = res.currentTarget.response;
-            if (data.data == null) {
-                console.log("The current song has no copyright, Please next song.");
-                Next();
-                return false;
-            }
             that.cache[++that.playCode] = {
                 id: data.id,
                 data: data.data,
@@ -302,18 +296,19 @@ function Pause() {
         return false;
 }
 function Next() {
-    if (that.playCode < window.Object.keys(that.cache).length - 1){
-        Pause(true);
+    if (that.playCode < window.Object.keys(that.cache).length - 1) {
+        Pause();
         playerInitial(that.cache[++that.playCode])
         return true;
-    } else if (that.playCode == window.Object.keys(that.cache).length - 1) {
-        that.playCode++;
     }
-    get();
     Pause();
     that.playState = false;
     if (!that.lrcShow)
         nextAnimation();
+    else
+        next.style.animationName = null;
+    get();
+    that.playCode++;
 }
 function Previous() {
     if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
@@ -368,6 +363,11 @@ function internal_music(name, art, id, picture) {
 function playerInitial(parameter) {
     if (!parameter)
         return;
+    if (parameter.data == null) {
+        console.log("The current song has no copyright, Please next song.");
+        Next();
+        return false;
+    }
     if (typeof(parameter.res) == "undefined")
         audio.src = parameter.data;
     else
@@ -393,11 +393,30 @@ function playerInitial(parameter) {
     else
         mPeo.style.animationName = null;
 
-    background.style.backgroundImage = 
-        window.document.getElementsByTagName("body")[0].style.backgroundImage = 
+    background.style.backgroundImage =
         picture.style.backgroundImage = "url(\"" + parameter.picture + "\")"; 
 
     createLrcObj(parameter.lyric);
+}
+function getDominantColor(imageData) {
+  const colorCount = {};
+  let maxColorCount = 0;
+  let dominantColor = [0, 0, 0];
+  
+  for (let i = 0; i < imageData.length; i += 4) {
+    const r = imageData[i];
+    const g = imageData[i + 1];
+    const b = imageData[i + 2];
+    
+    const color = `${r},${g},${b}`;
+    colorCount[color] = (colorCount[color] || 0) + 1;
+    if (colorCount[color] > maxColorCount) {
+      maxColorCount = colorCount[color];
+      dominantColor = [r, g, b];
+    }
+  }
+  
+  return dominantColor;
 }
 function createLrcObj(lrc) {
     oLRC = null;

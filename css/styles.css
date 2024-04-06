@@ -12,9 +12,6 @@ body {
 
 }*/
 body {
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 550%;
     overflow: hidden;
 }
 #background {
@@ -25,8 +22,8 @@ body {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
-    overflow: hidden;
-    filter: blur(40px);
+    padding: 40px;
+    filter: blur(30px);
     z-index: 0;
 }
 
