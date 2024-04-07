@@ -83,9 +83,15 @@ else
     {
         lrcBackground.onclick = background.onclick = () => {
             if (that.lrcShow == false) {
-                cShow();
+                player.style.animationName = "cShow, zoomOut";
+                player.style.animationDuration = "0.3s, 0.6s";
+                player.style.animationTimingFunction = "linear, ease-out";
+                player.style.animationIterationCount = "1, 1";
             } else if (that.lrcShow == true) {
-                aShow();
+                box.style.animationName = "cShow, zoomOut";
+                box.style.animationDuration = "0.3s, 0.6s";
+                box.style.animationTimingFunction = "linear, ease-out";
+                box.style.animationIterationCount = "1, 1";
             } else {
                 console.error("lrcShow Error!");
             }
@@ -122,7 +128,7 @@ else
 })();
 
 /* Version code */
-window.console.log(version.innerText = '6.4.1');
+window.console.log(version.innerText = '6.5.1');
 
 this.cache = [];
 
@@ -198,6 +204,40 @@ lock.addEventListener("animationend", () => {
 next.addEventListener("animationend", () => {
     next.style.animationName = null;
 });
+player.addEventListener("animationend", (e) => {
+    if (!that.lrcShow && e.target == player &&
+        (e.animationName == "cShow" || e.animationName == "zoomOut")
+    )
+    {
+        player.style.display = "none";
+        box.style.animationName = "show, zoomIn";
+        box.style.animationDuration = "0.3s, 0.6s";
+        box.style.animationTimingFunction = "linear. ease-out";
+        box.style.animationIterationCount = "1, 1";
+        box.style.display = "inline";
+        box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
+        box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
+        that.lrcShow = true;
+    }
+});
+box.addEventListener("animationend", (e) => {
+    if (that.lrcShow && e.target == box &&
+        (e.animationName == "cShow" || e.animationName == "zoomOut")
+    )
+    {
+        box.style.display = "none";
+        player.style.animationName = "show, zoomIn";
+        player.style.animationDuration = "0.3s, 0.6s";
+        player.style.animationTimingFunction = "linear, ease-out";
+        player.style.animationIterationCount = "1, 1";
+        player.style.display = "inline";
+        player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
+        player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
+        that.lrcShow = false;
+        window.onresize();
+    }
+});
+
 audio.onpause = function() {
     pauseAnimation();
     console.log("BEEN PAUSE!");
@@ -216,14 +256,17 @@ audio.onloaded = () => {
 };
 audio.addEventListener("timeupdate", function () {
     for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
-        if (this.currentTime < oLRC.ms[currentLine + 1].t){
+        if (this.currentTime < oLRC.ms[currentLine + 1].t) {
             currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
             currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
             currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
             currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
             __eul.children[currentLine].style.color = "white";
-            __eul.children[currentLine].style.fontSize = "140%";
-            __eul.style.transform = "translateY(" + (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) + "px)";
+            __eul.children[currentLine].style.fontSize = "130%";
+            __eul.style.transform =
+                "translateY(" +
+                (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) +
+                "px)";
             break;
         }
     }
@@ -540,37 +583,6 @@ function keyListen(e) {
 //     sPic.style.display = "inline";
 //     that.searchShow = false;
 // }
-function cShow() {
-    player.style.animationName = "cShow, zoomOut";
-    player.style.animationDuration = "0.3s, 0.5s";
-    player.style.animationTimingFunction = "linear, linear";
-    player.style.animationIterationCount = "1, 1";
-    player.style.display = "none";
-    box.style.animationName = "show, zoomIn";
-    box.style.animationDuration = "0.3s, 0.5s";
-    box.style.animationTimingFunction = "linear. linear";
-    box.style.animationIterationCount = "1, 1";
-    box.style.display = "inline";
-    box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
-    box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
-    that.lrcShow = true;
-}
-function aShow() {
-    player.style.animationName = "show, zoomIn";
-    player.style.animationDuration = "0.3s, 0.3s";
-    player.style.animationTimingFunction = "linear, linear";
-    player.style.animationIterationCount = "1, 1";
-    player.style.display = "inline";
-    box.style.animationName = "cShow, zoomOut";
-    box.style.animationDuration = "0.3s, 0,3s";
-    box.style.animationTimingFunction = "linear, linear";
-    box.style.animationIterationCount = "1, 1";
-    box.style.display = "none";
-    player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
-    player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
-    that.lrcShow = false;
-    window.onresize();
-}
 function playAnimation() {
     picture.style.animationPlayState = "running";
     play.style.animationName = "cShow, zoomOut";
