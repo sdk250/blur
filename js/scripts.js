@@ -132,7 +132,7 @@ else
 })();
 
 /* Version code */
-window.console.log(version.innerText = '6.5.1');
+window.console.log(version.innerText = '6.5.2');
 
 this.cache = [];
 
