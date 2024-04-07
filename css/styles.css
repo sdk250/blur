@@ -143,7 +143,7 @@ body {
 }
 #box {
     position: absolute;
-    width: 50%;
+    width: 80%;
     height: 50%;
     overflow: hidden;
     display: none;
@@ -151,8 +151,9 @@ body {
 }
 #lrc {
     color: rgb(126, 126, 126);
-    font-size: 160%;
+    font-size: 140%;
     list-style: none;
+    text-shadow: 2px 2px 4px #000000;
     transition-duration: 800ms;
 }
 #copyright {

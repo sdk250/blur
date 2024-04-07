@@ -21,6 +21,7 @@ var player,
     mName,
     mPeo,
     version,
+    animation_time,
     searchin;
 
 dark = new Dark();
@@ -41,6 +42,9 @@ searchin = dark.selectId("searchin");
 box = dark.selectId("box");
 __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
+/* Init time during animation */
+animation_time = "0.3s, 0.4s";
+
 const get = () => {
     that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
     that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -84,13 +88,13 @@ else
         lrcBackground.onclick = background.onclick = () => {
             if (that.lrcShow == false) {
                 player.style.animationName = "cShow, zoomOut";
-                player.style.animationDuration = "0.3s, 0.6s";
-                player.style.animationTimingFunction = "linear, ease-out";
+                player.style.animationDuration = animation_time;
+                player.style.animationTimingFunction = "ease-in, ease-out";
                 player.style.animationIterationCount = "1, 1";
             } else if (that.lrcShow == true) {
                 box.style.animationName = "cShow, zoomOut";
-                box.style.animationDuration = "0.3s, 0.6s";
-                box.style.animationTimingFunction = "linear, ease-out";
+                box.style.animationDuration = animation_time;
+                box.style.animationTimingFunction = "ease-in, ease-out";
                 box.style.animationIterationCount = "1, 1";
             } else {
                 console.error("lrcShow Error!");
@@ -211,8 +215,8 @@ player.addEventListener("animationend", (e) => {
     {
         player.style.display = "none";
         box.style.animationName = "show, zoomIn";
-        box.style.animationDuration = "0.3s, 0.6s";
-        box.style.animationTimingFunction = "linear. ease-out";
+        box.style.animationDuration = animation_time;
+        box.style.animationTimingFunction = "ease-in, ease-out";
         box.style.animationIterationCount = "1, 1";
         box.style.display = "inline";
         box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
@@ -227,8 +231,8 @@ box.addEventListener("animationend", (e) => {
     {
         box.style.display = "none";
         player.style.animationName = "show, zoomIn";
-        player.style.animationDuration = "0.3s, 0.6s";
-        player.style.animationTimingFunction = "linear, ease-out";
+        player.style.animationDuration = animation_time;
+        player.style.animationTimingFunction = "ease-in, ease-out";
         player.style.animationIterationCount = "1, 1";
         player.style.display = "inline";
         player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
