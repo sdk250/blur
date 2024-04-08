@@ -59,7 +59,7 @@ const get = () => {
         that.xhr.responseType = "json";
         that.xhr.onload = (res) => {
             let data = res.currentTarget.response;
-            that.cache[window.Object.keys(that.cache).length] = {
+            that.cache[++that.playCode] = {
                 id: id,
                 data: data.data,
                 name: data.name,
@@ -132,7 +132,7 @@ else
 })();
 
 /* Version code */
-window.console.log(version.innerText = '6.5.2');
+window.console.log(version.innerText = '6.5.3');
 
 this.cache = [];
 
@@ -354,7 +354,6 @@ function Next() {
     else
         next.style.animationName = null;
     get();
-    that.playCode++;
 }
 function Previous() {
     if (window.Object.keys(that.cache).length < 2 || that.playCode <= 0) {
