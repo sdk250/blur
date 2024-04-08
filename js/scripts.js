@@ -59,7 +59,7 @@ const get = () => {
         that.xhr.responseType = "json";
         that.xhr.onload = (res) => {
             let data = res.currentTarget.response;
-            that.cache[++that.playCode] = {
+            that.cache[that.playCode] = {
                 id: id,
                 data: data.data,
                 name: data.name,
@@ -132,7 +132,7 @@ else
 })();
 
 /* Version code */
-window.console.log(version.innerText = '6.5.4');
+window.console.log(version.innerText = '6.5.6');
 
 this.cache = [];
 
@@ -243,18 +243,17 @@ box.addEventListener("animationend", (e) => {
 });
 
 audio.onpause = function() {
-    pauseAnimation();
     console.log("BEEN PAUSE!");
 };
 audio.onplay = function() {
     playAnimation();
     console.log("BEEN PLAY!");
 };
-audio.onended = function(){
+audio.onended = function() {
     Next();
     console.log("Restart");
 };
-audio.onloaded = () => {
+audio.onloaded = function () {
     console.log("LOADED.");
     that.cache[that.playCode].res = window.URL.createObjectURL(this.src);
 };
@@ -339,18 +338,19 @@ function Pause() {
     if (that.playState == true) {
         let timer = setInterval(() => {
             if (audio.volume > 0.1) {
-                audio.volume -= 0.05;
-                console.log(audio.volume);
+                audio.volume -= 0.01;
             } else {
                 clearInterval(timer);
                 audio.volume = 1;
                 audio.pause();
             }
-        }, 20);
+        }, 5);
+        pauseAnimation();
     } else
         return false;
 }
 function Next() {
+    console.log(that.playCode, that.cache);
     if (that.playCode < window.Object.keys(that.cache).length - 1) {
         Pause();
         playerInitial(that.cache[++that.playCode])
@@ -362,6 +362,7 @@ function Next() {
         nextAnimation();
     else
         next.style.animationName = null;
+    that.playCode++;
     get();
 }
 function Previous() {
