@@ -85,7 +85,7 @@ else
     let visited = window.localStorage.getItem('visited');
     if (visited)
     {
-        lrcBackground.onclick = background.onclick = () => {
+        box.onclick = lrcBackground.onclick = background.onclick = () => {
             if (that.lrcShow == false) {
                 player.style.animationName = "cShow, zoomOut";
                 player.style.animationDuration = animation_time;
@@ -103,7 +103,7 @@ else
         get();
     } else {
         let i = 0;
-        lrcBackground.onclick = background.onclick = () => {
+        box.onclick = lrcBackground.onclick = background.onclick = () => {
             play.style.border = next.style.border = picture.style.border = mName.style.border = 'none';
             play.innerText = next.innerText = picture.innerText = mName.innerText = '';
             switch(++i > 4 ? guide() : i)
@@ -132,7 +132,7 @@ else
 })();
 
 /* Version code */
-window.console.log(version.innerText = '6.5.3');
+window.console.log(version.innerText = '6.5.4');
 
 this.cache = [];
 
@@ -336,9 +336,18 @@ function Play() {
     }
 }
 function Pause() {
-    if (that.playState == true)
-        audio.pause();
-    else
+    if (that.playState == true) {
+        let timer = setInterval(() => {
+            if (audio.volume > 0.1) {
+                audio.volume -= 0.05;
+                console.log(audio.volume);
+            } else {
+                clearInterval(timer);
+                audio.volume = 1;
+                audio.pause();
+            }
+        }, 20);
+    } else
         return false;
 }
 function Next() {
