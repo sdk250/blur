@@ -57,7 +57,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.9.0');
+window.console.log(version.innerText = '6.9.4');
 
 this.cache = [];
 
@@ -92,6 +92,9 @@ const get = () => {
             lyric: data.lyric
         };
         playerInitial(that.cache[that.playCode]);
+    };
+    that.xhr.onerror = () => {
+        that.playCode > 0 ? that.playCode-- : null;
     };
     that.xhr.send(null);
 };
@@ -244,10 +247,12 @@ window.navigator.mediaSession.setActionHandler('pause', () => {
 
 audio.onpause = function() {
     pauseAnimation();
+    window.navigator.mediaSession.playbackState = 'paused';
     console.log("BEEN PAUSE!");
 };
 audio.onplay = function() {
     playAnimation();
+    window.navigator.mediaSession.playbackState = 'playing';
     console.log("BEEN PLAY!");
 };
 audio.onended = function() {
@@ -261,9 +266,9 @@ audio.onloaded = function () {
 audio.oncanplay = function () {
     Play();
     window.navigator.mediaSession.setPositionState({
-        duration: audio.duration,
-        playbackRate: audio.playbackRate,
-        position: audio.currentTime
+        duration: this.duration,
+        playbackRate: this.playbackRate,
+        position: this.currentTime
     });
     console.log("AUTO PLAY");
 };
@@ -422,27 +427,6 @@ function loop_end() {
         picture.style.outlineColor = "rgba(175, 175, 175, 1)";
     else
         picture.style.outlineColor = "rgba(175, 175, 175, 0)";
-}
-function internal_music(name, art, id, picture) {
-    let music = art + " - " + name
-    that.xhr.open("GET", "music/" + music + ".lrc");
-    that.xhr.dataType = "text";
-    that.xhr.responseType = "text";
-    that.xhr.onload = (event) => {
-        that.cache[++that.playCode] = {
-            id: id,
-            data: "music/" + music + ".flac",
-            name: name,
-            picture: picture,
-            art: art,
-            lyric: event.currentTarget.responseText
-        };
-        playerInitial(that.cache[that.playCode]);
-    };
-    that.xhr.onerror = () => {
-        console.log("INTERNAL ERROR.");
-    };
-    that.xhr.send(null);
 }
 function playerInitial(parameter) {
     if (!parameter)
