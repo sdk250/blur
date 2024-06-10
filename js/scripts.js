@@ -77,30 +77,21 @@ this.isFullscreen = false;
 player.style.borderRadius = "15px 50px 30px 5px";
 
 const get = () => {
-    that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
+    that.xhr.open("POST", "https://sdk250.cn/api/id", true);
     that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    that.xhr.dataType = "json";
+    that.xhr.dataType = "text";
     that.xhr.responseType = "json";
     that.xhr.onload = (res) => {
-        let id = /url\?id\=(\d{3,12})/.exec(res.currentTarget.response.data.url)[1];
-        that.playState = false;
-        that.xhr.open("POST", "https://sdk250.cn/api/id", true);
-        that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        that.xhr.dataType = "json";
-        that.xhr.responseType = "json";
-        that.xhr.onload = (res) => {
-            let data = res.currentTarget.response;
-            that.cache[that.cache.length] = {
-                id: id,
-                data: data.data,
-                name: data.name,
-                picture: data.picture,
-                art: data.art,
-                lyric: data.lyric
-            };
-            playerInitial(that.cache[that.playCode]);
+        let data = res.currentTarget.response;
+        that.cache[that.cache.length] = {
+            id: data.id,
+            data: data.data,
+            name: data.name,
+            picture: data.picture,
+            art: data.art,
+            lyric: data.lyric
         };
-        that.xhr.send("songid=" + id);
+        playerInitial(that.cache[that.playCode]);
     };
     that.xhr.send(null);
 };
