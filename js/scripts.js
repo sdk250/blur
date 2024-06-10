@@ -49,15 +49,15 @@ animation_time = "0.3s, 0.4s";
 if (window.navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
 )) {
-    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, maximum-scale=0.6, user-scalable=no";
     window.isMobile = true;
 } else {
-    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
     window.isMobile = false;
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.7.9');
+window.console.log(version.innerText = '6.8.7');
 
 this.cache = [];
 
@@ -189,7 +189,11 @@ next.addEventListener("click", Next);
 if (this.isMobile) {
     picture.addEventListener("touchstart", loop_begin);
     picture.addEventListener("touchend", loop_end);
+    box.addEventListener('touchstart', fullscr_begin);
+    box.addEventListener('touchend', fullscr_end);
 } else {
+    box.addEventListener('mousedown', fullscr_begin);
+    box.addEventListener('mouseup', fullscr_end);
     picture.addEventListener("mousedown", loop_begin);
     picture.addEventListener("mouseup", loop_end);
 }
@@ -228,6 +232,23 @@ box.addEventListener("animationend", (e) => {
         that.lrcShow = false;
         window.onresize();
     }
+});
+
+window.navigator.mediaSession.setActionHandler('nexttrack', () => {
+    Next();
+    console.log('catch next!');
+});
+window.navigator.mediaSession.setActionHandler('previoustrack', () => {
+    Previous();
+    console.log('catch previous!');
+});
+window.navigator.mediaSession.setActionHandler('play', () => {
+    Play();
+    console.log('catch play!');
+});
+window.navigator.mediaSession.setActionHandler('pause', () => {
+    Pause();
+    console.log('catch pause!');
 });
 
 audio.onpause = function() {
@@ -287,16 +308,6 @@ searchin.onkeydown = (event) => {
         searchin.blur();
         Pause();
         that.playState = false;
-        // https://music.163.com/song?id=28302912
-        if ("闹够了没有" == event.target.value) {
-            internal_music(
-                event.target.value,
-                "赖伟锋",
-                "28302912",
-                "https://p2.music.126.net/KLh4hXNSFK8y96ahPda5fQ==/5940661324986386.jpg"
-            )
-            return;
-        }
         that.xhr.open("POST", "https://sdk250.cn/api/key", true);
         that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         that.xhr.dataType = "json";
@@ -372,6 +383,25 @@ function Previous() {
     that.playState = false;
     playerInitial(that.cache[--that.playCode]);
 }
+function fullscr_begin() {
+    let px = 1;
+    that.loop = setInterval(() => {
+        if (px < 30)
+            __eul.style.filter = 'blur(' + (px += 1) + 'px)';
+        else {
+            __eul.style.filter = 'blur(0px)';
+            that.isFullscreen ? window.document.exitFullscreen() : window.document.documentElement.requestFullscreen();
+            that.isFullscreen = !that.isFullscreen;
+            clearInterval(that.loop);
+            that.loop = null;
+        }
+    }, 25);
+}
+function fullscr_end() {
+    clearInterval(that.loop);
+    that.loop = null;
+    __eul.style.filter = 'blur(0px)';
+}
 function loop_begin() {
     let alph = audio.loop ? 0.99 : 0.01;
     that.startTime = +new Date();
@@ -435,6 +465,11 @@ function playerInitial(parameter) {
     that.playState = true;
 
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
+    window.navigator.mediaSession.metadata = new MediaMetadata({
+        title: parameter.name + " | Vistual-Music",
+        artist: parameter.art,
+        artwork: [{src: parameter.picture, sizes: '500x500'}]
+    })
 
     mName.innerText = parameter.name;
     mPeo.innerText = parameter.art;
