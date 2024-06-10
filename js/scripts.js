@@ -40,6 +40,7 @@ searchin = dark.selectId("searchin");
 box = dark.selectId("box");
 __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
+
 /* Init time during animation */
 animation_time = "0.3s, 0.4s";
 
@@ -56,7 +57,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.7.7');
+window.console.log(version.innerText = '6.7.9');
 
 this.cache = [];
 
@@ -230,6 +231,7 @@ box.addEventListener("animationend", (e) => {
 });
 
 audio.onpause = function() {
+    pauseAnimation();
     console.log("BEEN PAUSE!");
 };
 audio.onplay = function() {
@@ -325,32 +327,28 @@ function Play() {
         return false;
     }
 }
-function Pause(cached = false) {
-    console.log(cached);
+function Pause() {
     if (that.playState == true && that.fadePause == null) {
-        if (!cached) {
-            console.log(1);
-            that.fadePause = setInterval(() => {
-                if (audio.volume > 0.1) {
-                    audio.volume -= 0.02;
-                } else {
-                    clearInterval(that.fadePause);
-                    that.fadePause = null;
-                    audio.volume = 1;
-                    audio.pause();
-                    if (play.style.display == "none")
-                        pauseAnimation();
-                }
-            }, 3);
-        } else
-            audio.pause();
+        that.fadePause = setInterval(() => {
+            if (audio.volume > 0.1) {
+                audio.volume -= 0.02;
+            } else {
+                audio.pause();
+                clearInterval(that.fadePause);
+                audio.volume = 1;
+                if (play.style.display == "none")
+                    pauseAnimation();
+                that.fadePause = null;
+            }
+        }, 3);
         pauseAnimation();
     } else
         return false;
 }
 function Next() {
     if (that.playCode < window.Object.keys(that.cache).length - 1) {
-        Pause(true);
+        audio.pause();
+        pauseAnimation();
         that.playState = false;
         playerInitial(that.cache[++that.playCode])
         return true;
@@ -369,7 +367,8 @@ function Previous() {
         console.log("No cache");
         return false;
     }
-    Pause(true);
+    audio.pause();
+    pauseAnimation();
     that.playState = false;
     playerInitial(that.cache[--that.playCode]);
 }
@@ -547,6 +546,8 @@ function playAnimation() {
     pause.style.display = "inline";
 }
 function pauseAnimation() {
+    if (picture.style.animationPlayState == "paused")
+        return;
     picture.style.animationPlayState = "paused";
     pause.style.animationName = "cShow, zoomOut";
     pause.style.animationDuration = "0.4s, 0.15s";
