@@ -6,7 +6,6 @@ var player,
     background,
     bottom,
     picture,
-    lock,
     play,
     pause,
     next,
@@ -31,7 +30,6 @@ background = dark.selectId("background");
 player = dark.selectId("player");
 bottom = dark.selectId("bottom");
 picture = dark.selectId("picture");
-lock = dark.selectId("lock");
 play = dark.selectId("play");
 pause = dark.selectId("pause");
 next = dark.selectId("next");
@@ -44,6 +42,38 @@ __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
 /* Init time during animation */
 animation_time = "0.3s, 0.4s";
+
+
+
+if (window.navigator.userAgent.match(
+    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+)) {
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
+    window.isMobile = true;
+} else {
+    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
+    window.isMobile = false;
+}
+
+/* Version code */
+window.console.log(version.innerText = '6.7.7');
+
+this.cache = [];
+
+/* Init play state */
+this.playState = false;
+
+/* init Onplay code */
+this.playCode = 0;
+
+/* Init weight of fade */
+this.fadePause = null;
+
+this.loop = null;
+
+this.isFullscreen = false;
+
+player.style.borderRadius = "15px 50px 30px 5px";
 
 const get = () => {
     that.xhr.open("GET", "https://api.uomg.com/api/rand.music?sort=热歌榜&format=json", true);
@@ -59,7 +89,7 @@ const get = () => {
         that.xhr.responseType = "json";
         that.xhr.onload = (res) => {
             let data = res.currentTarget.response;
-            that.cache[that.playCode] = {
+            that.cache[that.cache.length] = {
                 id: id,
                 data: data.data,
                 name: data.name,
@@ -73,13 +103,6 @@ const get = () => {
     };
     that.xhr.send(null);
 };
-
-if (window.navigator.userAgent.match(
-    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
-))
-    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=0.6, user-scalable=no";
-else
-    window.document.getElementsByName("viewport")[0].content = "width=device-width, initial-scale=1.0, user-scalable=no";
 
 (function guide() {
     let visited = window.localStorage.getItem('visited');
@@ -131,21 +154,6 @@ else
     }
 })();
 
-/* Version code */
-window.console.log(version.innerText = '6.5.6');
-
-this.cache = [];
-
-/* Init play state */
-this.playState = false;
-
-/* init Onplay code */
-this.playCode = 0;
-
-this.isFullscreen = false;
-
-player.style.borderRadius = "15px 50px 30px 5px";
-
 /* on window change */
 window.onresize = function () {
     if (window.innerWidth * 0.7 < 400 && window.innerHeight * 0.2 < 200) {
@@ -169,7 +177,6 @@ window.onresize = function () {
     box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
     box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
     picture.style.height = picture.offsetWidth + "px";
-    lock.style.width = lock.style.height = picture.style.height;
 };
 window.onresize();
 
@@ -178,33 +185,13 @@ play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
 next.addEventListener("click", Next);
 // picture.addEventListener("click", Previous);
-lock.addEventListener("touchstart", LongPress);
-// lock.addEventListener("touchmove", () => {
-//     clearTimeout(that.timer);
-// });
-lock.addEventListener("touchend", () => {
-    clearTimeout(that.timer);
-    if (+new Date() - that.startTime < 500) {
-        Previous();
-        lock.style.animationName = null;
-    }
-});
-lock.addEventListener("mousedown", LongPress);
-// lock.addEventListener("mousemove", () => {
-//     clearTimeout(that.timer);
-//     console.log("UNSET 1");
-//     lock.style.animationName = null;
-// });
-lock.addEventListener("mouseup", () => {
-    clearTimeout(that.timer);
-    if (+new Date() - that.startTime < 600) {
-        Previous();
-        lock.style.animationName = null;
-    }
-});
-lock.addEventListener("animationend", () => {
-    lock.style.animationName = null;
-});
+if (this.isMobile) {
+    picture.addEventListener("touchstart", loop_begin);
+    picture.addEventListener("touchend", loop_end);
+} else {
+    picture.addEventListener("mousedown", loop_begin);
+    picture.addEventListener("mouseup", loop_end);
+}
 next.addEventListener("animationend", () => {
     next.style.animationName = null;
 });
@@ -256,6 +243,10 @@ audio.onended = function() {
 audio.onloaded = function () {
     console.log("LOADED.");
     that.cache[that.playCode].res = window.URL.createObjectURL(this.src);
+};
+audio.oncanplay = function () {
+    Play();
+    console.log("AUTO PLAY");
 };
 audio.addEventListener("timeupdate", function () {
     for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
@@ -323,7 +314,7 @@ searchin.onkeydown = (event) => {
         that.xhr.onerror = (res) => {
             Next();
         };
-        that.xhr.send("key=" + event.target.value);
+        that.xhr.send("key=" + event.target.value + "&platform=kuwo");
     }
 };
 
@@ -334,25 +325,33 @@ function Play() {
         return false;
     }
 }
-function Pause() {
-    if (that.playState == true) {
-        let timer = setInterval(() => {
-            if (audio.volume > 0.1) {
-                audio.volume -= 0.01;
-            } else {
-                clearInterval(timer);
-                audio.volume = 1;
-                audio.pause();
-            }
-        }, 5);
+function Pause(cached = false) {
+    console.log(cached);
+    if (that.playState == true && that.fadePause == null) {
+        if (!cached) {
+            console.log(1);
+            that.fadePause = setInterval(() => {
+                if (audio.volume > 0.1) {
+                    audio.volume -= 0.02;
+                } else {
+                    clearInterval(that.fadePause);
+                    that.fadePause = null;
+                    audio.volume = 1;
+                    audio.pause();
+                    if (play.style.display == "none")
+                        pauseAnimation();
+                }
+            }, 3);
+        } else
+            audio.pause();
         pauseAnimation();
     } else
         return false;
 }
 function Next() {
-    console.log(that.playCode, that.cache);
     if (that.playCode < window.Object.keys(that.cache).length - 1) {
-        Pause();
+        Pause(true);
+        that.playState = false;
         playerInitial(that.cache[++that.playCode])
         return true;
     }
@@ -370,29 +369,34 @@ function Previous() {
         console.log("No cache");
         return false;
     }
-    Pause();
+    Pause(true);
+    that.playState = false;
     playerInitial(that.cache[--that.playCode]);
 }
-function LongPress() {
+function loop_begin() {
+    let alph = audio.loop ? 0.99 : 0.01;
     that.startTime = +new Date();
-    lock.style.animationName = "lock";
-    lock.style.animationDuration = "0.6s";
-    lock.style.animationTimingFunction = "ease-in";
-    if (audio.loop)
-        lock.style.animationDirection = "reverse";
-    else
-        lock.style.animationDirection = "normal";
-    lock.style.animationIterationCount = "1";
-
-    that.timer = setTimeout(() => {
-        if (audio.loop) {
-            audio.loop = false;
-            lock.style.borderColor = "transparent";
-        } else {
-            audio.loop = true;
-            lock.style.borderColor = "rgb(175, 175, 175)";
+    that.loop = setInterval(() => {
+        if (alph < 1 && alph > 0)
+            picture.style.outlineColor = "rgba(175, 175, 175, " + (audio.loop ? (alph -= 0.05) : (alph += 0.05)) + ")";
+        else {
+            clearInterval(that.loop);
+            that.loop = null;
+            console.log(1);
+            audio.loop = !audio.loop;
         }
-    }, 500);
+    }, 30);
+}
+function loop_end() {
+    clearInterval(that.loop);
+    that.loop = null;
+    if (+new Date() - that.startTime < 300)
+        Previous();
+
+    if (audio.loop)
+        picture.style.outlineColor = "rgba(175, 175, 175, 1)";
+    else
+        picture.style.outlineColor = "rgba(175, 175, 175, 0)";
 }
 function internal_music(name, art, id, picture) {
     let music = art + " - " + name
@@ -420,6 +424,8 @@ function playerInitial(parameter) {
         return;
     if (parameter.data == null) {
         console.log("The current song has no copyright, Please next song.");
+        that.cache.pop();
+        that.playCode--;
         Next();
         return false;
     }
@@ -428,12 +434,6 @@ function playerInitial(parameter) {
     else
         audio.src = parameter.res;
     that.playState = true;
-    if (window.Object.keys(that.cache).length > 1) {
-        audio.oncanplay = function () {
-            Play();
-            console.log("AUTO PLAY");
-        };
-    }
 
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
 
@@ -451,7 +451,18 @@ function playerInitial(parameter) {
     background.style.backgroundImage =
         picture.style.backgroundImage = "url(\"" + parameter.picture + "\")"; 
 
-    createLrcObj(parameter.lyric);
+    oLRC = parameter.lyric;
+ 
+    console.log(oLRC.ms.length);
+    __eul.innerHTML = "";
+    for (let i of oLRC.ms)
+    {
+        that.eli = document.createElement("li");
+        that.eli.style.fontSize = "100%";
+        that.eli.style.opacity = 0.8;
+        that.eli.innerText = i.c;
+        __eul.appendChild(that.eli);
+    }
 }
 function getDominantColor(imageData) {
   const colorCount = {};
@@ -472,80 +483,6 @@ function getDominantColor(imageData) {
   }
   
   return dominantColor;
-}
-function createLrcObj(lrc) {
-    oLRC = null;
-    if (lrc.length == 0)
-        return;
-    let lrcs = []
-    for (let i of lrc)
-        lrcs.push(i.split('\n'));
-    oLRC = {
-        ti: "",
-        ar: "",
-        al: "",
-        by: "",
-        offset: 0,
-        ms: []
-    };
-    currentLine = 0;
-    for (let i of lrcs)
-    {
-        for (let j of i)
-        {
-            j = j.replace(/(^\s*)|(\s*$)/g, "");
-            let t = j.substring(j.indexOf("[") + 1, j.indexOf("]"));
-            let s = t.split(":");
-            if (isNaN(parseInt(s[0])))
-            {
-                for (let i in oLRC)
-                    if (i != "ms" && i == s[0].toLowerCase())
-                        oLRC[i] = s[1];
-            } else {
-                let arr = j.match(/\[(\d+:.+?)\]/g);
-                let start = 0;
-                for(let k of arr)
-                    start += k.length;
-                let content = j.substring(start);
-                for (let k of arr) {
-                    let t = k.substring(1, k.length-1);
-                    let s = t.split(":");
-                    let r = (parseFloat(s[0]) * 60 + parseFloat(s[1])).toFixed(3);
-                    let q = false;
-                    for (let l of oLRC.ms)
-                    {
-                        if (l.t == r)
-                        {
-                            q = true;
-                            l.c += '\n' + content;
-                        }
-                    }
-                    if (q)
-                        continue;
-                    oLRC.ms.push({
-                        t: r,
-                        c: content
-                    });
-                }
-            }
-        }
-    }
-    oLRC.ms[oLRC.ms.length] = {
-        "t": (window.parseFloat(oLRC.ms[oLRC.ms.length - 1].t) + 3).toString(),
-        "c": ""
-    };
- 
-    console.log(oLRC.ms.length);
-    __eul.innerHTML = "";
-    for (let i of oLRC.ms)
-    {
-        that.eli = document.createElement("li");
-        that.eli.style.fontSize = "100%";
-        that.eli.style.opacity = 0.8;
-        that.eli.innerText = i.c;
-        __eul.appendChild(that.eli);
-    }
-    
 }
 
 function rq(method, URL, parameter, dataType, responseType, success) {
