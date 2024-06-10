@@ -532,13 +532,13 @@ function keyListen(e) {
         else
             Pause();
     }
-    (e.shiftKey && e.keyCode == 78) ? \
+    (e.shiftKey && e.keyCode == 78) ?
         Next() : null;
-    (e.shiftKey && e.keyCode == 82) ? \
+    (e.shiftKey && e.keyCode == 82) ?
         Previous() : null;
-    (e.keyCode == 84) ? \
+    (e.keyCode == 84) ?
         background.onclick() : null;
-    (e.shiftKey && e.keyCode == 90) ? \
+    (e.shiftKey && e.keyCode == 90) ?
         searchText.blur() : null;
 }
 
