@@ -57,7 +57,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.8.9');
+window.console.log(version.innerText = '6.9.0');
 
 this.cache = [];
 
@@ -260,6 +260,11 @@ audio.onloaded = function () {
 };
 audio.oncanplay = function () {
     Play();
+    window.navigator.mediaSession.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate,
+        position: audio.currentTime
+    });
     console.log("AUTO PLAY");
 };
 audio.addEventListener("timeupdate", function () {
