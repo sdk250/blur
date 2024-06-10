@@ -539,7 +539,7 @@ function keyListen(e) {
     (e.keyCode == 84) ?
         background.onclick() : null;
     (e.shiftKey && e.keyCode == 90) ?
-        searchin.onfocus() : null;
+        mName.onclick() : null;
 }
 
 // function unLong() {
