@@ -1,7 +1,6 @@
 //JAVASCRIPT CONTENT
 "use strict";
 const that = this;
-that.xhr = new window.XMLHttpRequest();
 var player,
     background,
     bottom,
@@ -21,6 +20,7 @@ var player,
     mPeo,
     version,
     animation_time,
+    searchParams,
     searchin;
 
 dark = new Dark();
@@ -40,6 +40,9 @@ searchin = dark.selectId("searchin");
 box = dark.selectId("box");
 __eul = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
+searchParams = new FormData();
+searchParams.append('key', null);
+searchParams.append('platform', 'kuwo');
 
 /* Init time during animation */
 animation_time = "0.3s, 0.4s";
@@ -57,7 +60,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.9.4');
+window.console.log(version.innerText = '6.9.7');
 
 this.cache = [];
 
@@ -77,26 +80,29 @@ this.isFullscreen = false;
 player.style.borderRadius = "15px 50px 30px 5px";
 
 const get = () => {
-    that.xhr.open("POST", "https://sdk250.cn/api/id", true);
-    that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    that.xhr.dataType = "text";
-    that.xhr.responseType = "json";
-    that.xhr.onload = (res) => {
-        let data = res.currentTarget.response;
-        that.cache[that.cache.length] = {
-            id: data.id,
-            data: data.data,
-            name: data.name,
-            picture: data.picture,
-            art: data.art,
-            lyric: data.lyric
-        };
-        playerInitial(that.cache[that.playCode]);
-    };
-    that.xhr.onerror = () => {
-        that.playCode > 0 ? that.playCode-- : null;
-    };
-    that.xhr.send(null);
+    fetch('https://sdk250.cn/api/id', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: ''
+    })
+        .then(data => data.json())
+        .then(data => {
+            that.cache[that.cache.length] = {
+                id: data.id,
+                data: data.data,
+                name: data.name,
+                picture: data.picture,
+                art: data.art,
+                lyric: data.lyric
+            };
+            playerInitial(that.cache[that.playCode]);
+        })
+        .catch(err => {
+            console.log('Request error:', err);
+            that.playCode > 0 ? that.playCode-- : null;
+        });
 };
 
 (function guide() {
@@ -309,26 +315,31 @@ searchin.onkeydown = (event) => {
         searchin.blur();
         Pause();
         that.playState = false;
-        that.xhr.open("POST", "https://sdk250.cn/api/key", true);
-        that.xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        that.xhr.dataType = "json";
-        that.xhr.responseType = "json";
-        that.xhr.onload = (res) => {
-            let data = res.currentTarget.response;
-            that.cache[++that.playCode] = {
-                id: data.id,
-                data: data.data,
-                name: data.name,
-                picture: data.picture,
-                art: data.art,
-                lyric: data.lyric
-            };
-            playerInitial(that.cache[that.playCode]);
-        };
-        that.xhr.onerror = (res) => {
-            Next();
-        };
-        that.xhr.send("key=" + event.target.value + "&platform=kuwo");
+        searchParams.delete('key');
+        searchParams.append('key', event.target.value);
+        fetch('https://sdk250.cn/api/key', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(searchParams).toString()
+        })
+            .then(data => data.json())
+            .then(data => {
+                that.cache[++that.playCode] = {
+                    id: data.id,
+                    data: data.data,
+                    name: data.name,
+                    picture: data.picture,
+                    art: data.art,
+                    lyric: data.lyric
+                };
+                playerInitial(that.cache[that.playCode]);
+            })
+            .catch(err => {
+                console.log('Search error:', err);
+                Next();
+            });
     }
 };
 
