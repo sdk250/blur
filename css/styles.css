@@ -143,6 +143,7 @@ body {
     font-size: 140%;
     list-style: none;
     text-shadow: 2px 2px 4px #000000;
+    letter-spacing: 2px;
     transition-duration: 800ms;
 }
 #copyright {

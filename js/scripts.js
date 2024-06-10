@@ -57,7 +57,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.8.7');
+window.console.log(version.innerText = '6.8.8');
 
 this.cache = [];
 
