@@ -57,7 +57,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.8.8');
+window.console.log(version.innerText = '6.8.9');
 
 this.cache = [];
 
@@ -532,16 +532,14 @@ function keyListen(e) {
         else
             Pause();
     }
-    if (e.shiftKey && e.keyCode == 78)
-        Next();
-    if (e.shiftKey && e.keyCode == 82)
-        Previous();
-    if (e.keyCode == 84) 
-        background.onclick();
-    if (e.shiftKey && e.keyCode == 90) {
-        console.log("Text Blur!");
-        searchText.blur();
-    }
+    (e.shiftKey && e.keyCode == 78) ? \
+        Next() : null;
+    (e.shiftKey && e.keyCode == 82) ? \
+        Previous() : null;
+    (e.keyCode == 84) ? \
+        background.onclick() : null;
+    (e.shiftKey && e.keyCode == 90) ? \
+        searchText.blur() : null;
 }
 
 // function unLong() {
