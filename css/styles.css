@@ -124,7 +124,6 @@ body {
     width: 500%;
     height: 500%;
     background-color: rgb(27, 27, 27);
-    /*background-size: 600%;*/
     filter: blur(80px);
     opacity: 0.8;
     display: inline;

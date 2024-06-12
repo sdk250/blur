@@ -60,7 +60,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.9.7');
+window.console.log(version.innerText = '6.9.8');
 
 this.cache = [];
 
@@ -72,6 +72,9 @@ this.playCode = 0;
 
 /* Init weight of fade */
 this.fadePause = null;
+
+/* check support of mediaSession */
+this.supportMediaSession = 'mediaSession' in window.navigator;
 
 this.loop = null;
 
@@ -234,31 +237,33 @@ box.addEventListener("animationend", (e) => {
     }
 });
 
-window.navigator.mediaSession.setActionHandler('nexttrack', () => {
-    Next();
-    console.log('catch next!');
-});
-window.navigator.mediaSession.setActionHandler('previoustrack', () => {
-    Previous();
-    console.log('catch previous!');
-});
-window.navigator.mediaSession.setActionHandler('play', () => {
-    Play();
-    console.log('catch play!');
-});
-window.navigator.mediaSession.setActionHandler('pause', () => {
-    Pause();
-    console.log('catch pause!');
-});
+if (this.supportMediaSession) {
+    window.navigator.mediaSession.setActionHandler('nexttrack', () => {
+        Next();
+        console.log('catch next!');
+    });
+    window.navigator.mediaSession.setActionHandler('previoustrack', () => {
+        Previous();
+        console.log('catch previous!');
+    });
+    window.navigator.mediaSession.setActionHandler('play', () => {
+        Play();
+        console.log('catch play!');
+    });
+    window.navigator.mediaSession.setActionHandler('pause', () => {
+        Pause();
+        console.log('catch pause!');
+    });
+}
 
 audio.onpause = function() {
     pauseAnimation();
-    window.navigator.mediaSession.playbackState = 'paused';
+    that.supportMediaSession ? window.navigator.mediaSession.playbackState = 'paused' : null;
     console.log("BEEN PAUSE!");
 };
 audio.onplay = function() {
     playAnimation();
-    window.navigator.mediaSession.playbackState = 'playing';
+    that.supportMediaSession ? window.navigator.mediaSession.playbackState = 'playing' : null;
     console.log("BEEN PLAY!");
 };
 audio.onended = function() {
@@ -271,11 +276,12 @@ audio.onloaded = function () {
 };
 audio.oncanplay = function () {
     Play();
-    window.navigator.mediaSession.setPositionState({
-        duration: this.duration,
-        playbackRate: this.playbackRate,
-        position: this.currentTime
-    });
+    if (that.supportMediaSession)
+        window.navigator.mediaSession.setPositionState({
+            duration: this.duration,
+            playbackRate: this.playbackRate,
+            position: this.currentTime
+        });
     console.log("AUTO PLAY");
 };
 audio.addEventListener("timeupdate", function () {
@@ -456,11 +462,12 @@ function playerInitial(parameter) {
     that.playState = true;
 
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
-    window.navigator.mediaSession.metadata = new MediaMetadata({
-        title: parameter.name + " | Vistual-Music",
-        artist: parameter.art,
-        artwork: [{src: parameter.picture, sizes: '500x500'}]
-    })
+    if (that.supportMediaSession)
+        window.navigator.mediaSession.metadata = new MediaMetadata({
+            title: parameter.name + " | Vistual-Music",
+            artist: parameter.art,
+            artwork: [{src: parameter.picture, sizes: '500x500'}]
+        });
 
     mName.innerText = parameter.name;
     mPeo.innerText = parameter.art;
