@@ -114,7 +114,7 @@ body {
 #musicInfo #searchin {
     display: none;
     outline: none;
-    font-size: 140%;
+    font-size: 160%;
     color: white;
     background-color: #00000000;
     border-color: #00000000;
@@ -133,17 +133,40 @@ body {
     position: absolute;
     width: 80%;
     height: 50%;
-    overflow: hidden;
     display: none;
     z-index: 1;
 }
 #lrc {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 100%;
     color: rgb(126, 126, 126);
     font-size: 140%;
     list-style: none;
+    overflow: hidden;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
     text-shadow: 2px 2px 4px #000000;
     letter-spacing: 1px;
-    transition-duration: 800ms;
+    mask-image: linear-gradient(to top, transparent, rgb(126, 126, 126) 30%), linear-gradient(to bottom, transparent, rgb(126, 126, 126) 30%);
+    -webkit-mask-image: linear-gradient(to top, transparent, rgb(126, 126, 126) 30%), linear-gradient(to bottom, transparent, rgb(126, 126, 126) 30%);
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;
+}
+#lrc li {
+    user-select: none;
+}
+#lrc li:hover {
+    color: rgb(180, 180, 180);
+}
+#lrc li.active {
+    color: white;
+    font-size: 130%;
+    font-weight: bold;
 }
 #copyright {
     position: fixed;

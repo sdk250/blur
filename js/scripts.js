@@ -11,13 +11,16 @@ var player,
     lrcBackground,
     dark,
     oLRC,
-    __eul,
+    lrc,
     box,
     currentLine,
     audio,
     musicInfo,
     mName,
     mPeo,
+    blankLi_begin,
+    blankLi_end,
+    blank_size,
     version,
     animation_time,
     searchParams,
@@ -38,16 +41,14 @@ mName = dark.selectId("mName");
 mPeo = dark.selectId("mPeo");
 searchin = dark.selectId("searchin");
 box = dark.selectId("box");
-__eul = dark.selectId("lrc");
+lrc = dark.selectId("lrc");
 lrcBackground = dark.selectId("lrcBackground");
 searchParams = new FormData();
 searchParams.append('key', null);
 searchParams.append('platform', 'kuwo');
-
-/* Init time during animation */
-animation_time = "0.3s, 0.4s";
-
-
+blankLi_begin = window.document.createElement('li');
+blankLi_end = window.document.createElement('li');
+// blankLi_begin.style.width = blankLi_end.style.width = '20px';
 
 if (window.navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
@@ -60,7 +61,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '6.9.8');
+window.console.log(version.innerText = '7.0.4');
 
 this.cache = [];
 
@@ -76,9 +77,16 @@ this.fadePause = null;
 /* check support of mediaSession */
 this.supportMediaSession = 'mediaSession' in window.navigator;
 
+/* Init time during animation */
+animation_time = "0.3s, 0.4s";
+
 this.loop = null;
 
 this.isFullscreen = false;
+
+this.isUserScrolling = false;
+
+this.scrollTimeout = null;
 
 player.style.borderRadius = "15px 50px 30px 5px";
 
@@ -181,6 +189,9 @@ window.onresize = function () {
     box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
     box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
     picture.style.height = picture.offsetWidth + "px";
+    /* Block size of blank */
+    box.clientHeight / 2 ? blank_size = box.clientHeight / 2 : null;
+    blankLi_begin.style.minHeight = blankLi_end.style.minHeight = blank_size + 'px';
 };
 window.onresize();
 
@@ -192,11 +203,11 @@ next.addEventListener("click", Next);
 if (this.isMobile) {
     picture.addEventListener("touchstart", loop_begin);
     picture.addEventListener("touchend", loop_end);
-    box.addEventListener('touchstart', fullscr_begin);
-    box.addEventListener('touchend', fullscr_end);
+    // box.addEventListener('touchstart', fullscr_begin);
+    // box.addEventListener('touchend', fullscr_end);
 } else {
-    box.addEventListener('mousedown', fullscr_begin);
-    box.addEventListener('mouseup', fullscr_end);
+    // box.addEventListener('mousedown', fullscr_begin);
+    // box.addEventListener('mouseup', fullscr_end);
     picture.addEventListener("mousedown", loop_begin);
     picture.addEventListener("mouseup", loop_end);
 }
@@ -233,8 +244,16 @@ box.addEventListener("animationend", (e) => {
         player.style.top = (window.innerHeight / 2.2 - player.clientHeight / 2) + "px";
         player.style.left = (window.innerWidth / 2 - player.clientWidth / 2) + "px";
         that.lrcShow = false;
-        window.onresize();
     }
+    window.onresize();
+
+});
+lrc.addEventListener('scroll', () => {
+    that.isUserScrolling = true;
+    clearTimeout(that.scrollTimeout);
+    that.scrollTimeout = setTimeout(() => {
+        that.isUserScrolling = false;
+    }, 2000);
 });
 
 if (this.supportMediaSession) {
@@ -284,20 +303,25 @@ audio.oncanplay = function () {
         });
     console.log("AUTO PLAY");
 };
-audio.addEventListener("timeupdate", function () {
-    for (currentLine = 0; currentLine < oLRC.ms.length; currentLine++) {
-        if (this.currentTime < oLRC.ms[currentLine + 1].t) {
-            currentLine > 0 ? __eul.children[currentLine - 1].setAttribute("style", "color: auto") : null;
-            currentLine > 1 ? __eul.children[currentLine - 2].setAttribute("style", "color: auto") : null;
-            currentLine > 2 ? __eul.children[currentLine - 3].setAttribute("style", "color: auto") : null;
-            currentLine > 3 ? __eul.children[currentLine - 4].setAttribute("style", "color: auto") : null;
-            __eul.children[currentLine].style.color = "white";
-            __eul.children[currentLine].style.fontSize = "130%";
-            __eul.style.transform =
-                "translateY(" +
-                (box.clientHeight * 0.5 - __eul.children[currentLine].offsetTop) +
-                "px)";
-            break;
+audio.addEventListener('timeupdate', function () {
+    const currentTime = this.currentTime;
+
+    const currentLyric = oLRC.find((lyric, index) => {
+        const nextLyric = oLRC[index + 1];
+        return currentTime >= lyric.t && (!nextLyric || currentTime < nextLyric.t);
+    });
+
+    if (currentLyric) {
+        const li = document.querySelectorAll('#lrc li');
+        li.forEach(li => {
+            li.classList.remove('active');
+        });
+
+        const activeLi = Array.from(li).find(li => li.dataset.t == currentLyric.t);
+        if (activeLi) {
+            activeLi.classList.add('active');
+            if (!that.isUserScrolling)
+                lrc.scrollTop = activeLi.offsetTop - lrc.clientHeight / 2;
         }
     }
 });
@@ -401,25 +425,6 @@ function Previous() {
     that.playState = false;
     playerInitial(that.cache[--that.playCode]);
 }
-function fullscr_begin() {
-    let px = 1;
-    that.loop = setInterval(() => {
-        if (px < 30)
-            __eul.style.filter = 'blur(' + (px += 1) + 'px)';
-        else {
-            __eul.style.filter = 'blur(0px)';
-            that.isFullscreen ? window.document.exitFullscreen() : window.document.documentElement.requestFullscreen();
-            that.isFullscreen = !that.isFullscreen;
-            clearInterval(that.loop);
-            that.loop = null;
-        }
-    }, 25);
-}
-function fullscr_end() {
-    clearInterval(that.loop);
-    that.loop = null;
-    __eul.style.filter = 'blur(0px)';
-}
 function loop_begin() {
     let alph = audio.loop ? 0.99 : 0.01;
     that.startTime = +new Date();
@@ -483,38 +488,46 @@ function playerInitial(parameter) {
     background.style.backgroundImage =
         picture.style.backgroundImage = "url(\"" + parameter.picture + "\")"; 
 
-    oLRC = parameter.lyric;
+    oLRC = parameter.lyric.ms;
  
-    console.log(oLRC.ms.length);
-    __eul.innerHTML = "";
-    for (let i of oLRC.ms)
-    {
-        that.eli = document.createElement("li");
-        that.eli.style.fontSize = "100%";
-        that.eli.style.opacity = 0.8;
-        that.eli.innerText = i.c;
-        __eul.appendChild(that.eli);
-    }
+    console.log(oLRC.length);
+    lrc.innerHTML = "";
+    lrc.scrollTop = 0;
+    lrc.appendChild(blankLi_begin);
+    parameter.lyric.ms.forEach((lyric, index) => {
+        const li = document.createElement('li');
+        li.textContent = lyric.c;
+        li.dataset.t = lyric.t;
+        li.onclick = (e) => {
+            e.stopPropagation();
+        };
+        li.ondblclick = (e) => {
+            e.stopPropagation();
+            audio.currentTime = lyric.t;
+        };
+        lrc.appendChild(li);
+    });
+    lrc.appendChild(blankLi_end);
 }
 function getDominantColor(imageData) {
-  const colorCount = {};
-  let maxColorCount = 0;
-  let dominantColor = [0, 0, 0];
-  
-  for (let i = 0; i < imageData.length; i += 4) {
+    const colorCount = {};
+    let maxColorCount = 0;
+    let dominantColor = [0, 0, 0];
+
+    for (let i = 0; i < imageData.length; i += 4) {
     const r = imageData[i];
     const g = imageData[i + 1];
     const b = imageData[i + 2];
-    
+
     const color = `${r},${g},${b}`;
     colorCount[color] = (colorCount[color] || 0) + 1;
     if (colorCount[color] > maxColorCount) {
-      maxColorCount = colorCount[color];
-      dominantColor = [r, g, b];
+        maxColorCount = colorCount[color];
+        dominantColor = [r, g, b];
     }
-  }
-  
-  return dominantColor;
+    }
+
+    return dominantColor;
 }
 
 function rq(method, URL, parameter, dataType, responseType, success) {
