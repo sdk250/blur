@@ -159,6 +159,7 @@ body {
 }
 #lrc li {
     user-select: none;
+    white-space: pre-line;
 }
 #lrc li:hover {
     color: rgb(180, 180, 180);
