@@ -48,7 +48,6 @@ searchParams.append('key', null);
 searchParams.append('platform', 'kuwo');
 blankLi_begin = window.document.createElement('li');
 blankLi_end = window.document.createElement('li');
-// blankLi_begin.style.width = blankLi_end.style.width = '20px';
 
 if (window.navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
@@ -61,7 +60,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.0.4');
+window.console.log(version.innerText = '7.0.7');
 
 this.cache = [];
 
@@ -113,6 +112,7 @@ const get = () => {
         .catch(err => {
             console.log('Request error:', err);
             that.playCode > 0 ? that.playCode-- : null;
+            Next();
         });
 };
 
@@ -313,9 +313,7 @@ audio.addEventListener('timeupdate', function () {
 
     if (currentLyric) {
         const li = document.querySelectorAll('#lrc li');
-        li.forEach(li => {
-            li.classList.remove('active');
-        });
+        li.forEach(li => li.classList.remove('active'));
 
         const activeLi = Array.from(li).find(li => li.dataset.t == currentLyric.t);
         if (activeLi) {
@@ -430,7 +428,9 @@ function loop_begin() {
     that.startTime = +new Date();
     that.loop = setInterval(() => {
         if (alph < 1 && alph > 0)
-            picture.style.outlineColor = "rgba(175, 175, 175, " + (audio.loop ? (alph -= 0.05) : (alph += 0.05)) + ")";
+            picture.style.outlineColor =
+                "rgba(175, 175, 175, " +
+                (audio.loop ? (alph -= 0.05) : (alph += 0.05)) + ")";
         else {
             clearInterval(that.loop);
             that.loop = null;

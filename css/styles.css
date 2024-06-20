@@ -13,6 +13,7 @@ body {
 }*/
 body {
     overflow: hidden;
+    font-family: 'SimHei', Arial, sans-serif;
 }
 #background {
     position: absolute;
@@ -144,7 +145,7 @@ body {
     height: 100%;
     width: 100%;
     color: rgb(126, 126, 126);
-    font-size: 140%;
+    font-size: 110%;
     list-style: none;
     overflow: hidden;
     overflow-y: scroll;
@@ -160,13 +161,14 @@ body {
 #lrc li {
     user-select: none;
     white-space: pre-line;
+    transition: font-weight linear 600ms, color linear 300ms;
 }
 #lrc li:hover {
     color: rgb(180, 180, 180);
 }
 #lrc li.active {
     color: white;
-    font-size: 130%;
+    font-size: 140%;
     font-weight: bold;
 }
 #copyright {
