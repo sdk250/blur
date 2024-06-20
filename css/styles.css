@@ -161,7 +161,7 @@ body {
 #lrc li {
     user-select: none;
     white-space: pre-line;
-    transition: font-weight linear 600ms, color linear 300ms;
+    transition: font-weight linear 400ms, color linear 800ms;
 }
 #lrc li:hover {
     color: rgb(180, 180, 180);
