@@ -64,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.0.9');
+window.console.log(version.innerText = '7.1.0');
 
 this.cache = [];
 

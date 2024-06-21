@@ -137,6 +137,7 @@ body {
     text-align: center;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     font-size: 140%;
 }
 #list #playlist {
@@ -171,7 +172,7 @@ body {
 #box {
     position: absolute;
     width: 80%;
-    height: 50%;
+    height: 70%;
     display: none;
     z-index: 1;
 }
@@ -200,7 +201,7 @@ body {
     user-select: none;
     white-space: pre-line;
     cursor: pointer;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     transition: font-weight linear 600ms, color linear 300ms;
 }
 #lrc li:hover {
