@@ -64,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.0.8');
+window.console.log(version.innerText = '7.0.9');
 
 this.cache = [];
 
@@ -323,7 +323,7 @@ audio.onloaded = function () {
     that.cache[that.playCode].res = window.URL.createObjectURL(this.src);
 };
 audio.oncanplay = function () {
-    // Play();
+    Play();
     if (that.supportMediaSession)
         window.navigator.mediaSession.setPositionState({
             duration: this.duration,
@@ -500,7 +500,12 @@ function playerInitial(parameter) {
         li.textContent = parameter.name + ' - ' + parameter.art.join(' & ');
         li.dataset.playId = that.playCode;
         li.dataset.id = parameter.id;
-        li.onclick = (e) => e.target.dataset.playId == that.playCode ? null : playerInitial(cache[e.target.dataset.playId]);
+        li.onclick = (e) => {
+            if (e.target.dataset.playId != that.playCode) {
+                that.playCode = e.target.dataset.playId;
+                playerInitial(cache[that.playCode]);
+            }
+        };
         that.playlist.appendChild(li);
     }
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
