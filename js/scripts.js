@@ -23,6 +23,8 @@ var player,
     blank_size,
     version,
     animation_time,
+    list,
+    playlist,
     searchParams,
     searchin;
 
@@ -48,6 +50,8 @@ searchParams.append('key', null);
 searchParams.append('platform', 'kuwo');
 blankLi_begin = window.document.createElement('li');
 blankLi_end = window.document.createElement('li');
+list = dark.selectId('list-button');
+playlist = dark.selectId('playlist');
 
 if (window.navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
@@ -60,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.0.7');
+window.console.log(version.innerText = '7.0.8');
 
 this.cache = [];
 
@@ -78,6 +82,8 @@ this.supportMediaSession = 'mediaSession' in window.navigator;
 
 /* Init time during animation */
 animation_time = "0.3s, 0.4s";
+
+this.playlist_timeout = null;
 
 this.loop = null;
 
@@ -195,6 +201,29 @@ window.onresize = function () {
 };
 window.onresize();
 
+list.onclick = () => {
+    list.style.animationName = 'cShow, easeIn';
+    list.style.animationDuration = '0.2s, 0.3s';
+    list.style.animationTimingFunction = 'ease-in, ease-out';
+    list.style.animationIterationCount = '1, 1';
+    playlist.style.maxHeight = window.innerHeight * 0.4 + 'px';
+};
+list.addEventListener('animationend', () => {
+    list.style.animationName = 'show, easeOut';
+    list.style.animationDuration = '0.2s, 0.3s';
+    list.style.animationTimingFunction = 'ease-in, ease-out';
+    list.style.animationIterationCount = '1, 1';
+    that.playlist_timeout ? clearTimeout(that.playlist_timeout) : null;
+    that.playlist_timeout = setTimeout(() => {
+        playlist.style.maxHeight = 0;
+    }, 4000);
+});
+playlist.addEventListener('scroll', () => {
+    that.playlist_timeout ? clearTimeout(that.playlist_timeout) : null;
+    that.playlist_timeout = setTimeout(() => {
+        playlist.style.maxHeight = 0;
+    }, 4000);
+})
 this.lrcShow = false;
 play.addEventListener("click", Play);
 pause.addEventListener("click", Pause);
@@ -294,7 +323,7 @@ audio.onloaded = function () {
     that.cache[that.playCode].res = window.URL.createObjectURL(this.src);
 };
 audio.oncanplay = function () {
-    Play();
+    // Play();
     if (that.supportMediaSession)
         window.navigator.mediaSession.setPositionState({
             duration: this.duration,
@@ -466,16 +495,24 @@ function playerInitial(parameter) {
         audio.src = parameter.res;
     that.playState = true;
 
+    if (!window.Array.from(that.playlist.getElementsByTagName('li')).find((data) => data.dataset.id == parameter.id)) {
+        let li = window.document.createElement('li');
+        li.textContent = parameter.name + ' - ' + parameter.art.join(' & ');
+        li.dataset.playId = that.playCode;
+        li.dataset.id = parameter.id;
+        li.onclick = (e) => e.target.dataset.playId == that.playCode ? null : playerInitial(cache[e.target.dataset.playId]);
+        that.playlist.appendChild(li);
+    }
     dark.selectId("title").innerText = parameter.name + " | Vistual-Music";
     if (that.supportMediaSession)
         window.navigator.mediaSession.metadata = new MediaMetadata({
             title: parameter.name + " | Vistual-Music",
-            artist: parameter.art,
+            artist: parameter.art.join(' & '),
             artwork: [{src: parameter.picture, sizes: '500x500'}]
         });
 
     mName.innerText = parameter.name;
-    mPeo.innerText = parameter.art;
+    mPeo.innerText = parameter.art.join(' & ');
     if (mName.scrollWidth > musicInfo.clientWidth)
         musicNameAnimation(); // Text is too long.
     else
@@ -614,14 +651,14 @@ function nextAnimation() {
     }
 }
 function musicNameAnimation() {
-    document.getElementById("mName").style.animationName = "wordsLoop";
-    document.getElementById("mName").style.animationDuration = "6s";
-    document.getElementById("mName").style.animationTimingFunction = "linear";
-    document.getElementById("mName").style.animationIterationCount = "infinite";
+    mName.style.animationName = "wordsLoop";
+    mName.style.animationDuration = "6s";
+    mName.style.animationTimingFunction = "linear";
+    mName.style.animationIterationCount = "infinite";
 }
 function musicPeoAnimation() {
-    document.getElementById("mPeo").style.animationName = "wordsLoop";
-    document.getElementById("mPeo").style.animationDuration = "6s";
-    document.getElementById("mPeo").style.animationTimingFunction = "linear";
-    document.getElementById("mPeo").style.animationIterationCount = "infinite";
+    mPeo.style.animationName = "wordsLoop";
+    mPeo.style.animationDuration = "6s";
+    mPeo.style.animationTimingFunction = "linear";
+    mPeo.style.animationIterationCount = "infinite";
 }
