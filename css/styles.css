@@ -149,7 +149,7 @@ body {
     scroll-behavior: smooth;
 }
 #list #playlist li {
-    /* display: flex; */
+    display: flex;
     height: 40px;
     cursor: pointer;
     text-align: center;
