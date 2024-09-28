@@ -64,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.1.0');
+window.console.log(version.innerText = '7.2.0');
 
 this.cache = [];
 
@@ -82,6 +82,9 @@ this.supportMediaSession = 'mediaSession' in window.navigator;
 
 /* Init time during animation */
 animation_time = "0.3s, 0.4s";
+
+/* List for all lyric */
+this.lyric_elements = []
 
 this.playlist_timeout = null;
 
@@ -335,17 +338,19 @@ audio.oncanplay = function () {
 audio.addEventListener('timeupdate', function () {
     const currentTime = this.currentTime;
 
-    const currentLyric = oLRC.find((lyric, index) => {
-        const nextLyric = oLRC[index + 1];
-        return currentTime >= lyric.t && (!nextLyric || currentTime < nextLyric.t);
-    });
+    let currentLyric = null;
+    for (let i = 0; i < oLRC.length; i++) {
+        if (currentTime >= oLRC[i].t && (!oLRC[i + 1] || currentTime < oLRC[i + 1].t)) {
+            currentLyric = oLRC[i];
+            break;
+        }
+    }
 
     if (currentLyric) {
-        const li = document.querySelectorAll('#lrc li');
-        li.forEach(li => li.classList.remove('active'));
-
-        const activeLi = Array.from(li).find(li => li.dataset.t == currentLyric.t);
-        if (activeLi) {
+        const activeLi = Array.from(that.lyric_elements).find(li => li.dataset.t == currentLyric.t);
+        if (activeLi && !activeLi.classList.contains('active'))
+        {
+            that.lyric_elements.forEach(li => li.classList.remove('active'));
             activeLi.classList.add('active');
             if (!that.isUserScrolling)
                 lrc.scrollTop = activeLi.offsetTop - lrc.clientHeight / 2;
@@ -550,6 +555,7 @@ function playerInitial(parameter) {
         lrc.appendChild(li);
     });
     lrc.appendChild(blankLi_end);
+    that.lyric_elements = window.document.querySelectorAll('#lrc li');
 }
 function getDominantColor(imageData) {
     const colorCount = {};
