@@ -64,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.2.1');
+window.console.log(version.innerText = '7.2.2');
 
 this.cache = [];
 
@@ -285,7 +285,7 @@ lrc.addEventListener('scroll', () => {
     clearTimeout(that.scrollTimeout);
     that.scrollTimeout = setTimeout(() => {
         that.isUserScrolling = false;
-    }, 2000);
+    }, 1200);
 });
 
 if (this.supportMediaSession) {
