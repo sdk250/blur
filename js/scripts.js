@@ -347,7 +347,7 @@ audio.addEventListener('timeupdate', function () {
     }
 
     if (currentLyric) {
-        const activeLi = Array.from(that.lyric_elements).find(li => li.dataset.t == currentLyric.t);
+        const activeLi = that.lyric_elements.find(li => li.dataset.t == currentLyric.t);
         if (activeLi && !activeLi.classList.contains('active'))
         {
             that.lyric_elements.forEach(li => li.classList.remove('active'));
@@ -555,7 +555,7 @@ function playerInitial(parameter) {
         lrc.appendChild(li);
     });
     lrc.appendChild(blankLi_end);
-    that.lyric_elements = window.document.querySelectorAll('#lrc li');
+    that.lyric_elements = window.Array.from(window.document.querySelectorAll('#lrc li'));
 }
 function getDominantColor(imageData) {
     const colorCount = {};
