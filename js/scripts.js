@@ -261,8 +261,8 @@ player.addEventListener("animationend", (e) => {
         box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
         that.lyric_elements.forEach(li => {
             let diff = li.scrollWidth + 100;
-            if (diff > lrc.offsetWidth)
-                li.style.width = (diff - lrc.offsetWidth) + 'px';
+            if (diff > lrc.clientWidth)
+                li.style.width = (li.scrollWidth + diff - lrc.clientWidth - 100) + 'px';
             else
                 li.style.width = diff + 'px';
         });
