@@ -64,7 +64,7 @@ if (window.navigator.userAgent.match(
 }
 
 /* Version code */
-window.console.log(version.innerText = '7.2.3');
+window.console.log(version.innerText = '7.2.4');
 
 this.cache = [];
 
@@ -259,7 +259,13 @@ player.addEventListener("animationend", (e) => {
         box.style.display = "inline";
         box.style.top = (window.innerHeight / 2 - box.clientHeight / 2) + "px";
         box.style.left = (window.innerWidth / 2 - box.clientWidth / 2) + "px";
-        that.lyric_elements.forEach(li => li.style.width = li.scrollWidth + 100 + 'px');
+        that.lyric_elements.forEach(li => {
+            let diff = li.scrollWidth + 100;
+            if (diff > lrc.offsetWidth)
+                li.style.width = (diff - lrc.offsetWidth) + 'px';
+            else
+                li.style.width = diff + 'px';
+        });
         that.lrcShow = true;
     }
 });
