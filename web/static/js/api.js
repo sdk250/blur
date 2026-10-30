@@ -8,8 +8,11 @@ async function json(res) {
   if (!res.ok) throw new Error(data.msg || `HTTP ${res.status}`);
   return data;
 }
-const post = (path, form) => fetch(path, { method: 'POST', body: new URLSearchParams(form) }).then(json);
+// 后端对上游有 5s/15s 超时；浏览器这边再兜一层，卡住时转场能失败退出而不是一直挂着
+const TIMEOUT_MS = 20000;
+const signal = () => AbortSignal.timeout(TIMEOUT_MS);
+const post = (path, form) => fetch(path, { method: 'POST', body: new URLSearchParams(form), signal: signal() }).then(json);
 
-export const fetchTop = (limit = 100) => fetch(`/top?limit=${limit}`).then(json);
+export const fetchTop = (limit = 100) => fetch(`/top?limit=${limit}`, { signal: signal() }).then(json);
 export const fetchSong = id => post('/id', { songid: id });
 export const searchSong = key => post('/key', { key, platform: 'netease' });

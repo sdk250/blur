@@ -49,6 +49,21 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
     ], { duration: 700, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' }).finished;
   }
 
+  // 转场中途出任何错：清掉替身；如果没进到播放页就把首页恢复；最后一定解锁，页面不能被锁死
+  function recover(err) {
+    document.querySelectorAll('#ghost').forEach(g => g.remove());
+    if (!player.active) {
+      home.classList.remove('away');
+      if (hidden) { hidden.style.visibility = ''; hidden = null; }
+    }
+    toast(`出错了：${err?.message || err}`);
+  }
+  // 只有拿到锁的这一次调用才负责解锁：转场进行中再点按钮直接忽略，不能把正在进行的那个解锁
+  const guarded = fn => async (...args) => {
+    if (busy) return;
+    try { await fn(...args); } catch (err) { recover(err); } finally { lock(false); }
+  };
+
   async function enter(tile, getSong) {
     if (busy) return; lock(true);
     const cover = tile.querySelector('img');
@@ -139,5 +154,5 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
     ghost.remove(); lock(false);
   }
 
-  return { enter, leave, switchTo, get busy() { return busy; } };
+  return { enter: guarded(enter), leave: guarded(leave), switchTo: guarded(switchTo), get busy() { return busy; } };
 }

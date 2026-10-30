@@ -20,7 +20,6 @@ from re import IGNORECASE, compile
 
 from Crypto.Cipher import AES
 from flask import Flask, Response, request
-from flask_cors import CORS
 from requests import Session
 
 HERE = path.dirname(__file__)
@@ -39,8 +38,8 @@ DEFAULT_LEVEL = 'exhigh'
 
 app = Flask(__name__, static_folder='static', static_url_path='')  # 前端和接口同源
 app.url_map.strict_slashes = False
-CORS(app=app, supports_credentials=True)
 session = Session()
+TIMEOUT = (5, 15)  # 连接 / 读取超时：上游卡住时尽快失败，不让前端转场一直挂着
 session.headers['User-Agent'] = USER_AGENT
 
 
@@ -92,6 +91,7 @@ def netease(url: str, params: dict) -> dict:
     data += bytes([pad]) * pad
     eparams = hexlify(AES.new(NETEASE_KEY, AES.MODE_ECB).encrypt(data)).upper().decode()
     return loads(session.post(
+        timeout=TIMEOUT,
         url='https://music.163.com/api/linux/forward',
         headers={'Referer': 'https://music.163.com/'},
         data={'eparams': eparams},
@@ -161,11 +161,11 @@ def eapi(url: str, payload: dict) -> dict:
     params = AES.new(EAPI_KEY, AES.MODE_ECB).encrypt(data).hex()
     cookies = {'os': 'pc', 'appver': '', 'osver': '', 'deviceId': 'pyncm!', **COOKIES}
     return loads(session.post(
+        timeout=TIMEOUT,
         url=url,
         headers={'User-Agent': EAPI_UA, 'Referer': 'https://music.163.com/'},
         cookies=cookies,
         data={'params': params},
-        timeout=30,
     ).content)
 
 
@@ -202,6 +202,7 @@ def netease_song(song_id: int | str, level: str = DEFAULT_LEVEL) -> dict:
 
 def netease_search(key: str, level: str = DEFAULT_LEVEL) -> dict | None:
     result = loads(session.get(
+        timeout=TIMEOUT,
         url='https://music.163.com/api/search/get/web',
         params={'s': key, 'type': 1, 'offset': 0, 'limit': 1},
     ).content)
@@ -213,6 +214,7 @@ def netease_search(key: str, level: str = DEFAULT_LEVEL) -> dict | None:
 
 def kuwo_search(key: str) -> dict | None:
     result = loads(session.get(
+        timeout=TIMEOUT,
         url='http://kuwo.cn/search/searchMusicBykeyWord',
         params={
             'ft': 'music', 'vipver': 1, 'client': 'kt', 'cluster': 0, 'strategy': 2012,
@@ -225,6 +227,7 @@ def kuwo_search(key: str) -> dict | None:
     rid = hit['DC_TARGETID']
 
     play = loads(session.get(
+        timeout=TIMEOUT,
         url='https://mobi.kuwo.cn/mobi.s',
         params={
             'f': 'web', 'source': 'kwplayer_ar_1.1.9_jiakong_118980_320.apk',
@@ -236,6 +239,7 @@ def kuwo_search(key: str) -> dict | None:
         data = f'https://example.com/proxy/{play["data"]["url"][len("http://"):]}'
 
     lyric = loads(session.get(
+        timeout=TIMEOUT,
         url='https://kuwo.cn/openapi/v1/www/lyric/getlyric',
         params={'musicId': rid},
     ).content)

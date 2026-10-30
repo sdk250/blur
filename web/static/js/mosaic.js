@@ -39,8 +39,8 @@ function makeSearchTile(onPick, toast) {
       who.textContent = ''; toast(`没有搜到：${err.message}`);
     }
   };
-  // 点封面（不是点输入框）就进入
-  t.onclick = e => { if (found && !e.target.closest('form')) onPick(t, async () => found); };
+  // 点封面（不是点输入框）就进入；重新取一次，搜索时拿到的链接可能已经过期
+  t.onclick = e => { if (found && !e.target.closest('form')) onPick(t, () => fetchSong(found.id)); };
   t.show = show; // 返回时当前歌不在拼图里，就让搜索格变成它
   return t;
 }

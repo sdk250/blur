@@ -82,3 +82,25 @@ def test_index_served(client):
 def test_credentials_and_source_not_served(client):
     for p in ('/cookie.txt', '/api.py', '/top.json', '/../cookie.txt'):
         assert client.get(p).status_code == 404, p
+
+
+def test_every_upstream_request_has_timeout(monkeypatch):
+    seen = []
+
+    class Resp:
+        content = b'{"code": 200, "songs": [{"name": "n", "ar": [], "al": {}}], "result": {}, "data": [{}]}'
+
+    def record(*a, **k):
+        seen.append(k.get('timeout'))
+        return Resp()
+    monkeypatch.setattr(api.session, 'get', record)
+    monkeypatch.setattr(api.session, 'post', record)
+    api.netease('https://music.163.com/api/x', {})
+    api.eapi('https://interface3.music.163.com/eapi/x', {})
+    api.netease_search('k')
+    assert seen and all(t for t in seen), seen
+
+
+def test_no_cross_origin_access(client):
+    r = client.get('/top?limit=1', headers={'Origin': 'http://evil.example'})
+    assert 'Access-Control-Allow-Origin' not in r.headers

@@ -51,7 +51,8 @@ body.light { background: #fff; }
 .line { color: var(--lyric, #f0eaf2); position: absolute; transform-style: preserve-3d; max-width: 86vw; text-align: center; font-size: clamp(28px, 5vw, 64px); font-weight: 600;
   letter-spacing: .08em; text-shadow: 0 0 .22em var(--glow, rgba(60,40,80,.45)), 0 0 .56em var(--glow, rgba(60,40,80,.45)); /* 光晕随字号缩放（64px 时为 14px / 36px） */ will-change: transform; line-height: 1.35; }
 /* 左下角只留歌名；一段时间没操作就隐去，鼠标悬浮变成“返回” */
-#title { position: fixed; left: 32px; bottom: 28px; z-index: 4; cursor: pointer; display: grid;
+#title { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; /* 不能选中文字，手机点击没有蓝色高亮 */
+  position: fixed; left: 32px; bottom: 28px; z-index: 4; cursor: pointer; display: grid;
   font-size: 15px; letter-spacing: .12em; color: var(--lyric, #fff); opacity: .75; transition: opacity .8s; }
 #title > span { grid-area: 1 / 1; white-space: nowrap; transition: opacity .3s, transform .3s; }
 #title .ctrls { display: flex; gap: 18px; opacity: 0; transform: translateX(-6px); pointer-events: none; }

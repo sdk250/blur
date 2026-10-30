@@ -9,7 +9,7 @@ export const tune = {
 };
 export const EXIT_MS = 900;        // 歌词退场
 export const BG_BLUR = 30;         // 背景模糊基准 px（长边 1440px 以上的屏幕）
-export const BLUR = 0.7;           // 所有模糊（背景 + 歌词）的整体倍数：用户要求整体调轻
+export const BLUR = 0.85;          // 所有模糊（背景 + 歌词）的整体倍数：用户定的
 export const MIST_LIFE = 11;       // 一团色雾的生命周期 s
 export const MIST_COUNT = 16;
 export const IDLE_MS = 2500;       // 无操作多久隐去歌名
