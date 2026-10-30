@@ -7,6 +7,7 @@ import { buildMosaic } from './mosaic.js';
 import { createTransitions } from './transition.js';
 import { Navigator } from './navigation.js';
 import { shouldRebuild } from './resize-policy.js';
+import { createLongPress, toggleFullscreen } from './fullscreen.js';
 
 const $ = id => document.getElementById(id);
 const home = $('home'), playerEl = $('player'), titleEl = $('title');
@@ -29,6 +30,18 @@ titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
 titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
+
+// 长按播放页背景（歌名那一块除外）：进入 / 退出全屏
+const longPress = createLongPress(() => {
+  if (!toggleFullscreen()) toast('这个浏览器不支持全屏');
+});
+playerEl.addEventListener('pointerdown', e => {
+  if (player.active && !tr.busy && !titleEl.contains(e.target)) longPress.down(e.clientX, e.clientY);
+});
+playerEl.addEventListener('pointermove', e => longPress.move(e.clientX, e.clientY));
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) playerEl.addEventListener(ev, () => longPress.up());
+playerEl.addEventListener('click', e => { if (!longPress.takeClick()) e.stopPropagation(); }, true);
+playerEl.addEventListener('contextmenu', e => e.preventDefault()); // 手机长按不弹系统菜单
 
 // 首次构建播浮现动画；之后的重建沿用搜索格、不播动画
 const build = songs => {
