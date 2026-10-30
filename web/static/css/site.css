@@ -24,7 +24,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; transi
 .search .hint { position: relative; font-size: 13px; letter-spacing: .3em; opacity: .6; }
 .search form { position: relative; width: 80%; }
 .search input { width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,.25);
-  background: rgba(0,0,0,.35); color: #fff; font-size: 15px; outline: none; text-align: center; }
+  background: rgba(0,0,0,.35); color: #fff; font-size: 16px; outline: none; text-align: center; } /* 16px：小于 16px 时 iPhone 聚焦会自动放大页面 */
 .search input:focus { border-color: rgba(255,255,255,.6); }
 .search .who { position: relative; font-size: 14px; text-align: center; text-shadow: 0 1px 8px rgba(0,0,0,.8); min-height: 1.4em; }
 .search.found .hint { display: none; }

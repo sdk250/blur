@@ -6,6 +6,7 @@ import { createPlayer } from './player.js';
 import { buildMosaic } from './mosaic.js';
 import { createTransitions } from './transition.js';
 import { Navigator } from './navigation.js';
+import { shouldRebuild } from './resize-policy.js';
 
 const $ = id => document.getElementById(id);
 const home = $('home'), playerEl = $('player'), titleEl = $('title');
@@ -29,7 +30,10 @@ titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
 
-const build = songs => { mosaic = buildMosaic(home, songs, { onPick: tr.enter, toast }); };
+// 首次构建播浮现动画；之后的重建沿用搜索格、不播动画
+const build = songs => {
+  mosaic = buildMosaic(home, songs, { onPick: tr.enter, toast, searchTile: mosaic?.searchTile, animate: !mosaic });
+};
 
 (async () => {
   let songs;
@@ -41,9 +45,15 @@ const build = songs => { mosaic = buildMosaic(home, songs, { onPick: tr.enter, t
   }
   nav.pool = songs; // 随机下一曲的候选 = 拼图里的歌
   build(songs);
-  let rt;
-  addEventListener('resize', () => {
-    clearTimeout(rt);
-    rt = setTimeout(() => { if (!tr.busy && !player.active) build(songs); }, 300);
-  });
+  let rt, size = { w: innerWidth, h: innerHeight };
+  const typing = () => document.activeElement?.tagName === 'INPUT';
+  const relayout = () => {
+    const now = { w: innerWidth, h: innerHeight };
+    if (tr.busy || player.active || !shouldRebuild(size, now, typing())) return;
+    size = now;
+    build(songs);
+  };
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(relayout, 300); });
+  // 收起键盘后（输入框失焦）补一次：期间被跳过的尺寸变化在这里追上
+  home.addEventListener('focusout', () => { clearTimeout(rt); rt = setTimeout(relayout, 300); });
 })();

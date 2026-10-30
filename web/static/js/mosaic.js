@@ -46,16 +46,18 @@ function makeSearchTile(onPick, toast) {
 }
 
 /**
+ * opts.searchTile：重建时传入原来的搜索格，保留输入内容和搜索结果
+ * opts.animate：首次打开才播从中心浮现的动画，重建时不播（否则看起来像刷新了页面）
  * @returns {{ tileOf: Map<id, HTMLElement>, searchTile: HTMLElement }}
  *   tileOf：每首歌第一次出现的格子（返回时替身缩回这里）
  */
-export function buildMosaic(homeEl, songs, { onPick, toast }) {
+export function buildMosaic(homeEl, songs, { onPick, toast, searchTile: keep = null, animate = true }) {
   homeEl.innerHTML = '';
   const view = { w: innerWidth, h: innerHeight };
   const layout = layoutMosaic(view);
   const tileOf = new Map();
 
-  const searchTile = makeSearchTile(onPick, toast);
+  const searchTile = keep || makeSearchTile(onPick, toast);
   place(searchTile, layout.search);
   const all = [searchTile];
 
@@ -78,7 +80,7 @@ export function buildMosaic(homeEl, songs, { onPick, toast }) {
   for (const t of all) {
     const l = parseFloat(t.style.left), tp = parseFloat(t.style.top), s = parseFloat(t.style.width);
     const d = Math.hypot(l + s / 2 - cx, tp + s / 2 - cy);
-    t.animate([{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }],
+    if (animate) t.animate([{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }],
       { duration: 700, delay: d * 0.9, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
     homeEl.appendChild(t);
   }

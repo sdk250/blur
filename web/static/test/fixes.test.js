@@ -80,3 +80,21 @@ test('播放器 toggle：播放 ↔ 暂停，空格和按钮共用', async () =>
   await Promise.race([p.toggle(), new Promise(r => setTimeout(r, 0))]); // 淡出要等动画帧，不必等完
   assert.equal(p.playing, false);
 });
+
+test('重建拼图时沿用原来的搜索格，且不重放浮现动画', async () => {
+  const realDocument = globalThis.document;
+  globalThis.document = { createElement: () => fakeEl() };
+  try {
+    const { buildMosaic } = await import('../js/mosaic.js');
+    const songs = [{ id: 1, name: 'a', art: ['b'], picture: 'x' }];
+    const first = buildMosaic(fakeEl(), songs, { onPick() {}, toast() {} });
+    let animated = 0;
+    const kept = first.searchTile;
+    kept.animate = () => { animated++; return any(); };
+    const again = buildMosaic(fakeEl(), songs, { onPick() {}, toast() {}, searchTile: kept, animate: false });
+    assert.equal(again.searchTile, kept, '搜索格被换掉了（输入框和搜索结果会丢）');
+    assert.equal(animated, 0, '重建时又播了一遍浮现动画');
+  } finally {
+    globalThis.document = realDocument;
+  }
+});
