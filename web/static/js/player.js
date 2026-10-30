@@ -54,25 +54,32 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
       stepVol();
     });
   }
+  // 播放/暂停按钮显示哪个符号
+  const syncIcon = () => titleEl.classList.toggle('is-playing', playing);
+
   async function fadePlay(ms) {
-    playing = true;
+    playing = true; syncIcon();
     if (audio.paused) {
       audio.volume = 0;
-      try { await audio.play(); } catch (e) { playing = false; throw e; }
+      try { await audio.play(); } catch (e) { playing = false; syncIcon(); throw e; }
     }
     fadeVolume(1, ms);
   }
   async function fadePause(ms) {
-    playing = false;
+    playing = false; syncIcon();
     if (await fadeVolume(0, ms)) audio.pause();
+  }
+
+  // 空格和播放/暂停按钮共用
+  function toggle() {
+    return playing ? fadePause(FADE_TOGGLE_MS) : fadePlay(FADE_TOGGLE_MS).catch(() => {});
   }
 
   // ---------- 空格 ----------
   addEventListener('keydown', e => {
     if (e.code !== 'Space' || !active || self.busy) return; // 转场进行中不响应
     e.preventDefault();
-    if (playing) fadePause(FADE_TOGGLE_MS);
-    else fadePlay(FADE_TOGGLE_MS).catch(() => {});
+    toggle();
   });
 
   // ---------- 闲置隐藏：鼠标停在歌名/按钮上时不隐藏，否则淡出中的按钮会吞掉一次点击 ----------
@@ -102,7 +109,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
     busy: false, // 转场进行中由转场模块置为 true
     get playing() { return playing; },
     get active() { return active; },
-    fadePlay, fadePause,
+    fadePlay, fadePause, toggle,
 
     /** 在封面挡着屏幕时调用：取色、规划歌词、换歌名、换音源（不自动播放） */
     start(song, coverImg) {
@@ -120,7 +127,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
     },
 
     stop() {
-      fadeId++; playing = false;
+      fadeId++; playing = false; syncIcon();
       audio.pause(); audio.removeAttribute('src'); audio.load();
       active = false;
       playerEl.classList.remove('on');

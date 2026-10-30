@@ -65,3 +65,13 @@ test('转场进行中再点别的按钮，不会提前解锁正在进行的转�
   assert.equal(tr.busy, true, '第二次点击把正在进行的转场解锁了');
   assert.equal(player.busy, true);
 });
+
+test('播放器 toggle：播放 ↔ 暂停，空格和按钮共用', async () => {
+  const { createPlayer } = await import('../js/player.js');
+  const audio = { paused: true, volume: 1, play: async () => { audio.paused = false; }, pause() { audio.paused = true; }, addEventListener() {} };
+  const p = createPlayer({ playerEl: any(), titleEl: any(), audio, stage: any(), bg: any() });
+  await p.toggle();
+  assert.equal(p.playing, true);
+  await Promise.race([p.toggle(), new Promise(r => setTimeout(r, 0))]); // 淡出要等动画帧，不必等完
+  assert.equal(p.playing, false);
+});

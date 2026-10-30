@@ -58,6 +58,11 @@ body.light { background: #fff; }
 #title .ctrls { display: flex; gap: 18px; opacity: 0; transform: translateX(-6px); pointer-events: none; }
 #title .ctrls span { opacity: .6; transition: opacity .2s; }
 #title .ctrls span:hover { opacity: 1; }
+/* 播放/暂停：SVG 符号（字符 ▶ 在 iPhone 上会变成彩色表情），颜色跟随歌词色 */
+#title .pp { display: flex; align-items: center; }
+#title .pp svg { width: .7em; height: .84em; fill: currentColor; }
+#title .i-pause, #title.is-playing .i-play { display: none; }
+#title.is-playing .i-pause { display: block; }
 #title .ctrls span.off { opacity: .2; pointer-events: none; }
 #title:hover { opacity: 1; }
 #title:hover .name { opacity: 0; transform: translateX(6px); }

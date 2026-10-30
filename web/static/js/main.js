@@ -26,6 +26,7 @@ const tr = createTransitions({ home, player, nav, mosaic: () => mosaic, toast })
 titleEl.querySelector('.back').onclick = () => tr.leave();
 titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
 titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
+titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
 
 const build = songs => { mosaic = buildMosaic(home, songs, { onPick: tr.enter, toast }); };
