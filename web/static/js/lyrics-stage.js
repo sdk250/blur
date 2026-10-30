@@ -1,12 +1,12 @@
 // 歌词舞台：入场（从隧道深处飞出）、停住（贴墙、漂浮）、退场（滑向墙、逐字散去）。
 // 结构：.line 只管 3D 位置/远近/缩放；.wall 管贴墙倾斜、漂浮、透明度、模糊；每个字一个 span 管弧形弯曲。
 // （透明度和 filter 会把 3D 压扁，所以不能放在 .line 上）
-import { tune, EXIT_MS } from './tune.js';
+import { tune, EXIT_MS, BLUR } from './tune.js';
 
 const easeOut = t => 1 - Math.pow(1 - t, 3);
 
 // 模糊按字号缩放：数值是 64px 大字时定的，手机上字号缩到 28px，固定像素会糊得太重
-const blurFor = (line, px) => `blur(${px * (parseFloat(getComputedStyle(line).fontSize) || 64) / 64}px)`;
+const blurFor = (line, px) => `blur(${px * BLUR * (parseFloat(getComputedStyle(line).fontSize) || 64) / 64}px)`;
 
 // 一句歌词逐字拆成 span；换行后面是翻译，另起一行、字小一号
 function fillLine(wall, text) {

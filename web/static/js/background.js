@@ -1,13 +1,17 @@
 // 背景：纯黑/纯白底上，一团团色雾从“隧道中心”深处涌出（只靠运动营造穿梭感，没有任何线条）。
 // 隧道中心用欠阻尼弹簧追 focus（由播放器按“提前 lead 秒”的歌词位置设置）。
-import { tune, MIST_LIFE, MIST_COUNT } from './tune.js';
+import { tune, MIST_LIFE, MIST_COUNT, BG_BLUR, BLUR } from './tune.js';
 import { rgb } from './palette.js';
 
 const SCALE = 0.25; // 低分辨率绘制，反正要被模糊
 
 export function createBackground(canvas) {
   const ctx = canvas.getContext('2d');
-  const resize = () => { canvas.width = innerWidth * 1.2 * SCALE; canvas.height = innerHeight * 1.2 * SCALE; };
+  const resize = () => {
+    canvas.width = innerWidth * 1.2 * SCALE; canvas.height = innerHeight * 1.2 * SCALE;
+    // 模糊随屏幕缩放：手机屏小，同样的像素会糊得更重
+    canvas.style.filter = `blur(${BG_BLUR * BLUR * Math.min(1, Math.max(innerWidth, innerHeight) / 1440)}px)`;
+  };
   addEventListener('resize', resize); resize();
 
   let palette = [[120, 100, 150], [90, 95, 135], [140, 105, 130], [85, 110, 140], [110, 90, 120]];
