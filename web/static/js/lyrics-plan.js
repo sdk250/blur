@@ -29,14 +29,14 @@ function splitParts(text) {
 
 /**
  * 接口的 lyric.ms -> [{t, text}]；丢掉空句（末尾那条只是结束标记）。翻译在换行之后。
- * 中文句子里用空格隔开的几段拆成几小句，时间按字数比例排在这句和下一句之间。
+ * 中文句子里用空格隔开的几段拆成几小句，时间按字数比例排在这句和下一句之间（split: false 时不拆）。
  */
-export function toLines(lyric) {
+export function toLines(lyric, { split = true } = {}) {
   const raw = (lyric?.ms || []).map(l => ({ t: l.t, text: (l.c || '').trim() }));
   const out = [];
   raw.forEach((l, i) => {
     if (!l.text) return;
-    const parts = splitParts(l.text);
+    const parts = split ? splitParts(l.text) : [l.text];
     if (parts.length === 1) { out.push({ t: l.t, text: parts[0] }); return; }
     const sizes = parts.map(p => [...p].length), total = sizes.reduce((a, b) => a + b, 0);
     const next = raw.slice(i + 1).find(x => x.text) || raw[i + 1]; // 下一句（含末尾的结束标记）

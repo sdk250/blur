@@ -110,3 +110,7 @@ test('只拆汉字与汉字之间的空格：作词作曲、冒号、连字符�
   for (const c of keep) assert.deepEqual(toLines({ ms: [{ t: 1, c }] }).map(l => l.text), [c], c);
   assert.deepEqual(toLines({ ms: [{ t: 1, c: '在某年 在某月' }, { t: 5, c: 'x' }] }).slice(0, 2).map(l => l.text), ['在某年', '在某月']);
 });
+
+test('拆句开关关掉时不拆', () => {
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: '在某年 在某月' }] }, { split: false }).map(l => l.text), ['在某年 在某月']);
+});

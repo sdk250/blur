@@ -119,3 +119,18 @@ test('播放器：开始播放时标题是歌名，停止后变回 Blur', async 
     globalThis.document = realDocument;
   }
 });
+
+test('播放器：拆句开关默认开、能切换，并记在浏览器里', async () => {
+  const store = {};
+  globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+  const { createPlayer } = await import('../js/player.js');
+  const mk = () => createPlayer({ playerEl: any(), titleEl: any(), audio: { addEventListener() {} }, stage: any(), bg: any() });
+  const p = mk();
+  assert.equal(p.split, true);
+  p.setSplit(false);
+  assert.equal(p.split, false);
+  assert.equal(mk().split, false, '刷新后应记住关闭');
+  p.setSplit(true);
+  assert.equal(mk().split, true);
+  delete globalThis.localStorage;
+});

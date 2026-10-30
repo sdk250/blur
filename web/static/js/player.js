@@ -19,6 +19,20 @@ function coverPixels(img) {
 export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
   let lines = [], idx = -1, active = false, playing = false, fadeId = 0, song = null;
   const syncTitle = () => { document.title = pageTitle(song, lines, idx); };
+
+  // 空格拆句开关：默认开，记在浏览器里
+  const SPLIT_KEY = 'blur.split';
+  let split = true;
+  try { split = localStorage.getItem(SPLIT_KEY) !== '0'; } catch { /* 无痕模式等读不到就用默认 */ }
+  const syncSplit = () => titleEl.classList.toggle('split-on', split);
+  syncSplit();
+
+  // 按当前开关把这首歌的歌词排好（转行、在场时间、落点）
+  function planSong() {
+    lines = toLines(song.lyric, { split });
+    schedule(lines);
+    planPositions(lines, text => stage.measure(text), { w: innerWidth, h: innerHeight });
+  }
   const prevBtn = titleEl.querySelector('.prev');
 
   // ---------- 每帧 ----------
@@ -125,6 +139,15 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
     get active() { return active; },
     fadePlay, fadePause, toggle,
 
+    get split() { return split; },
+    /** 切换空格拆句：播放中立刻生效——场上的歌词照常退场，从当前位置按新规则继续 */
+    setSplit(on) {
+      split = on;
+      try { localStorage.setItem(SPLIT_KEY, on ? '1' : '0'); } catch { /* 存不了就只在本次生效 */ }
+      syncSplit();
+      if (active && song) { stage.defocusAll(); planSong(); idx = -1; }
+    },
+
     /** 在封面挡着屏幕时调用：取色、规划歌词、换歌名、换音源（不自动播放） */
     start(next, coverImg) {
       song = next;
@@ -133,9 +156,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
       applyCover(coverImg);
       active = true;
       playerEl.classList.add('on');
-      lines = toLines(song.lyric);
-      schedule(lines);
-      planPositions(lines, text => stage.measure(text), { w: innerWidth, h: innerHeight });
+      planSong();
       titleEl.querySelector('.name').textContent = `${song.name} · ${song.art.join(' / ')}`;
       syncTitle();
       wake();

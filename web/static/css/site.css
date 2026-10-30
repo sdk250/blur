@@ -60,6 +60,13 @@ body.light { background: #fff; }
 #title .ctrls span:hover { opacity: 1; }
 /* 播放/暂停：SVG 符号（字符 ▶ 在 iPhone 上会变成彩色表情），颜色跟随歌词色 */
 #title .pp { display: flex; align-items: center; }
+/* 空格拆句开关：在“返回 · 上一曲 · 下一曲”那一行的上面，和它们一起出现/隐藏 */
+#title .ctrls { position: relative; }
+#title .ctrls .opts { position: absolute; left: 0; bottom: 100%; padding-bottom: 12px; opacity: 1; }
+#title .split { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
+#title .sw { position: relative; width: 26px; height: 14px; border-radius: 8px; border: 1px solid currentColor; box-sizing: border-box; }
+#title .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; transition: transform .2s; }
+#title.split-on .sw::after { transform: translateX(12px); }
 #title .pp svg { width: .7em; height: .84em; fill: currentColor; }
 #title .i-pause, #title.is-playing .i-play { display: none; }
 #title.is-playing .i-pause { display: block; }

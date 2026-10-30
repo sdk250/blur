@@ -29,6 +29,7 @@ titleEl.querySelector('.back').onclick = () => tr.leave();
 titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
 titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
+titleEl.querySelector('.split').onclick = () => { if (!tr.busy) player.setSplit(!player.split); };
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
 
 // 长按播放页背景（歌名那一块除外）：进入 / 退出全屏
