@@ -77,3 +77,8 @@ def test_eapi_params_format(monkeypatch):
 def test_index_served(client):
     r = client.get('/')
     assert r.status_code == 200 and b'<div id="home">' in r.data
+
+
+def test_credentials_and_source_not_served(client):
+    for p in ('/cookie.txt', '/api.py', '/top.json', '/../cookie.txt'):
+        assert client.get(p).status_code == 404, p

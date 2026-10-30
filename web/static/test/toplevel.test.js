@@ -21,3 +21,14 @@ test('画面模块的顶层与工厂函数能完整执行', async () => {
   assert.equal(typeof player.start, 'function');
   assert.equal(player.playing, false);
 });
+
+test('首页、转场与组装模块能完整执行', async () => {
+  const { buildMosaic } = await import('../js/mosaic.js');
+  const { createTransitions } = await import('../js/transition.js');
+  const { Navigator } = await import('../js/navigation.js');
+  const m = buildMosaic(any(), [{ id: 1, name: 'a', art: ['b'], picture: 'https://p1.music.126.net/x.jpg' }], { onPick() {}, toast() {} });
+  assert.ok(m.tileOf instanceof Map);
+  const tr = createTransitions({ home: any(), player: any(), nav: new Navigator([]), mosaic: () => m, toast() {} });
+  assert.equal(tr.busy, false);
+  await import('../js/main.js'); // 顶层启动：fetch 被桩挂起，不进入数据流程
+});
