@@ -69,3 +69,38 @@ test('lineAt', () => {
   assert.equal(lineAt(ls, 99), 2);
   assert.equal(lineAt([], 3), -1);
 });
+
+// ---------- 按空格把一句拆成几小句 ----------
+const near = (a, b) => Math.abs(a - b) < 1e-6;
+
+test('中文按空格拆开，时间按字数比例分到这句和下一句之间', () => {
+  const ls = toLines({ ms: [{ t: 39.83, c: '在某年 在某月 在某个' }, { t: 42.76, c: '波澜不惊 日子里' }] });
+  assert.deepEqual(ls.slice(0, 3).map(l => l.text), ['在某年', '在某月', '在某个']);
+  const span = 42.76 - 39.83;
+  assert.ok(near(ls[0].t, 39.83) && near(ls[1].t, 39.83 + span / 3) && near(ls[2].t, 39.83 + span * 2 / 3));
+  assert.deepEqual(ls.slice(3).map(l => l.text), ['波澜不惊', '日子里']);
+  assert.ok(near(ls[3].t, 42.76));
+});
+
+test('后面是长间奏时，按每字 0.4 秒算，不把小句拖散', () => {
+  const ls = toLines({ ms: [{ t: 10, c: '我爱你 你爱他 最后我' }, { t: 30, c: '下一句' }] });
+  assert.ok(near(ls[1].t, 10 + 9 * 0.4 / 3) && near(ls[2].t, 10 + 9 * 0.4 * 2 / 3));
+});
+
+test('最后一句没有下一句，也按每字 0.4 秒', () => {
+  const ls = toLines({ ms: [{ t: 5, c: '甲乙 丙丁' }] });
+  assert.ok(near(ls[1].t, 5 + 4 * 0.4 / 2));
+});
+
+test('英文不拆；中英混排时英文旁边的空格不拆', () => {
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: 'let it go' }] }).map(l => l.text), ['let it go']);
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: '我说 let it go 就好' }] }).map(l => l.text), ['我说 let it go 就好']);
+});
+
+test('带翻译的句子不拆（翻译对应整句）', () => {
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: '在某年 在某月\nIn some year' }] }).map(l => l.text), ['在某年 在某月\nIn some year']);
+});
+
+test('全角空格和连续空格都算一个分隔', () => {
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: '心碎了　 突然想你了' }, { t: 9, c: 'x' }] }).slice(0, 2).map(l => l.text), ['心碎了', '突然想你了']);
+});

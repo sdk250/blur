@@ -4,11 +4,47 @@ import { tune, EXIT_MS } from './tune.js';
 const PAD = 40;   // 包围盒四周余量，留给漂浮和弯曲
 const TRIES = 60;
 
-/** 接口的 lyric.ms -> [{t, text}]；丢掉空句（末尾那条只是结束标记）。翻译在换行之后。 */
+const SEC_PER_CHAR = 0.4; // 拆开的小句按字数分时间；后面是长间奏时，按这个语速估算时长
+const LATIN = /[A-Za-z0-9'’]/;
+
+// 一句按空格拆成几小句：只拆两边都不是英文字母/数字的空格（英文单词之间不拆），带翻译的不拆
+function splitParts(text) {
+  if (text.includes('\n')) return [text];
+  const parts = [];
+  let cur = '';
+  const chars = [...text];
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (/\s/.test(ch)) {
+      let j = i; while (j + 1 < chars.length && /\s/.test(chars[j + 1])) j++;
+      const before = chars[i - 1] || '', after = chars[j + 1] || '';
+      if (cur && after && !LATIN.test(before) && !LATIN.test(after)) { parts.push(cur); cur = ''; }
+      else cur += ' ';
+      i = j;
+    } else cur += ch;
+  }
+  if (cur) parts.push(cur);
+  return parts;
+}
+
+/**
+ * 接口的 lyric.ms -> [{t, text}]；丢掉空句（末尾那条只是结束标记）。翻译在换行之后。
+ * 中文句子里用空格隔开的几段拆成几小句，时间按字数比例排在这句和下一句之间。
+ */
 export function toLines(lyric) {
-  return (lyric?.ms || [])
-    .map(l => ({ t: l.t, text: (l.c || '').trim() }))
-    .filter(l => l.text);
+  const raw = (lyric?.ms || []).map(l => ({ t: l.t, text: (l.c || '').trim() }));
+  const out = [];
+  raw.forEach((l, i) => {
+    if (!l.text) return;
+    const parts = splitParts(l.text);
+    if (parts.length === 1) { out.push({ t: l.t, text: parts[0] }); return; }
+    const sizes = parts.map(p => [...p].length), total = sizes.reduce((a, b) => a + b, 0);
+    const next = raw.slice(i + 1).find(x => x.text) || raw[i + 1]; // 下一句（含末尾的结束标记）
+    const span = Math.min(next ? next.t - l.t : Infinity, total * SEC_PER_CHAR);
+    let done = 0;
+    parts.forEach((text, k) => { out.push({ t: l.t + span * done / total, text }); done += sizes[k]; });
+  });
+  return out;
 }
 
 /** 每句的在场时间：至少飞完入场，且等到下一句出现才开始退场 */
