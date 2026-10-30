@@ -64,8 +64,14 @@ body.light { background: #fff; }
 #title .i-pause, #title.is-playing .i-play { display: none; }
 #title.is-playing .i-pause { display: block; }
 #title .ctrls span.off { opacity: .2; pointer-events: none; }
-#title:hover { opacity: 1; }
-#title:hover .name { opacity: 0; transform: translateX(6px); }
-#title:hover .ctrls { opacity: 1; transform: none; pointer-events: auto; }
+/* 展开按钮：鼠标靠悬停；触屏靠点一下歌名加上 .open（触屏的 :hover 会“粘住”，不用它） */
+@media (hover: hover) {
+  #title:hover { opacity: 1; }
+  #title:hover .name { opacity: 0; transform: translateX(6px); }
+  #title:hover .ctrls { opacity: 1; transform: none; pointer-events: auto; }
+}
+#title.open { opacity: 1; }
+#title.open .name { opacity: 0; transform: translateX(6px); }
+#title.open .ctrls { opacity: 1; transform: none; pointer-events: auto; }
 #player.idle #title { opacity: 0; pointer-events: none; }
 #player.idle { cursor: none; }

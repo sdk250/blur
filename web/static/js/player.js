@@ -2,6 +2,7 @@
 import { tune, IDLE_MS, FADE_TOGGLE_MS } from './tune.js';
 import { paletteFromPixels, coverTheme, rgb } from './palette.js';
 import { toLines, schedule, planPositions, lineAt } from './lyrics-plan.js';
+import { createRevealGuard } from './reveal-guard.js';
 
 // 读封面像素（48x48）；跨域被污染、图没加载好时返回 null，取色会退回默认色
 function coverPixels(img) {
@@ -88,11 +89,22 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
     playerEl.classList.remove('idle');
     clearTimeout(idleTimer);
     idleTimer = setTimeout(function hide() {
-      if (titleEl.matches(':hover')) { idleTimer = setTimeout(hide, 500); return; }
+      if (titleEl.matches(':hover') && matchMedia('(hover: hover)').matches) { idleTimer = setTimeout(hide, 500); return; }
       playerEl.classList.add('idle');
+      titleEl.classList.remove('open');
     }, IDLE_MS);
   }
   for (const ev of ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, wake, { passive: true });
+
+  // 触屏：第一下点歌名只展开按钮，不触发按钮；点别处收起
+  const guard = createRevealGuard();
+  titleEl.addEventListener('pointerdown', e => {
+    const wasOpen = titleEl.classList.contains('open');
+    guard.pointerDown(e.pointerType, wasOpen);
+    if (e.pointerType !== 'mouse') titleEl.classList.add('open');
+  });
+  titleEl.addEventListener('click', e => { if (!guard.takeClick()) e.stopPropagation(); }, true); // 捕获阶段，先于按钮
+  addEventListener('pointerdown', e => { if (!titleEl.contains(e.target)) titleEl.classList.remove('open'); });
 
   // ---------- 一首歌 ----------
   function applyCover(img) {
