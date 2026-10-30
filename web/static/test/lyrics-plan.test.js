@@ -104,3 +104,9 @@ test('带翻译的句子不拆（翻译对应整句）', () => {
 test('全角空格和连续空格都算一个分隔', () => {
   assert.deepEqual(toLines({ ms: [{ t: 1, c: '心碎了　 突然想你了' }, { t: 9, c: 'x' }] }).slice(0, 2).map(l => l.text), ['心碎了', '突然想你了']);
 });
+
+test('只拆汉字与汉字之间的空格：作词作曲、冒号、连字符这类不拆', () => {
+  const keep = ['词 : 叶天爱、安妮宝贝、酥油饼、陈雪凝', '曲 : 陈雪凝', '作词：刘伟锋 - 编曲', '陈雪凝 - 白山茶', '录制混缩： 巨人先生', '（Cover 陈雪凝） 白山茶'];
+  for (const c of keep) assert.deepEqual(toLines({ ms: [{ t: 1, c }] }).map(l => l.text), [c], c);
+  assert.deepEqual(toLines({ ms: [{ t: 1, c: '在某年 在某月' }, { t: 5, c: 'x' }] }).slice(0, 2).map(l => l.text), ['在某年', '在某月']);
+});

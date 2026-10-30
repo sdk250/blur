@@ -5,9 +5,9 @@ const PAD = 40;   // 包围盒四周余量，留给漂浮和弯曲
 const TRIES = 60;
 
 const SEC_PER_CHAR = 0.4; // 拆开的小句按字数分时间；后面是长间奏时，按这个语速估算时长
-const LATIN = /[A-Za-z0-9'’]/;
+const HAN = /\p{Script=Han}/u; // 只拆汉字与汉字之间的空格
 
-// 一句按空格拆成几小句：只拆两边都不是英文字母/数字的空格（英文单词之间不拆），带翻译的不拆
+// 一句按空格拆成几小句：只拆两边都是汉字的空格（“词 : 某某”、“A - B”、英文单词之间都不拆），带翻译的不拆
 function splitParts(text) {
   if (text.includes('\n')) return [text];
   const parts = [];
@@ -18,7 +18,7 @@ function splitParts(text) {
     if (/\s/.test(ch)) {
       let j = i; while (j + 1 < chars.length && /\s/.test(chars[j + 1])) j++;
       const before = chars[i - 1] || '', after = chars[j + 1] || '';
-      if (cur && after && !LATIN.test(before) && !LATIN.test(after)) { parts.push(cur); cur = ''; }
+      if (cur && HAN.test(before) && HAN.test(after)) { parts.push(cur); cur = ''; }
       else cur += ' ';
       i = j;
     } else cur += ch;
