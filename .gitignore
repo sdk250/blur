@@ -1,1 +1,5 @@
 assets/
+.superpowers/
+web/.venv/
+__pycache__/
+web/cookie.txt
