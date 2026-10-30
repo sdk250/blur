@@ -37,7 +37,7 @@ EAPI_UA = (
 # 音质：standard / exhigh(320k mp3) / lossless(flac) / hires ...，会员歌曲需要 cookie.txt
 DEFAULT_LEVEL = 'exhigh'
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')  # 前端和接口同源
 app.url_map.strict_slashes = False
 CORS(app=app, supports_credentials=True)
 session = Session()
@@ -260,6 +260,11 @@ def kuwo_search(key: str) -> dict | None:
 
 
 # ---------- 路由 ----------
+
+@app.route('/', methods=['GET'])
+def index():
+    return app.send_static_file('index.html')
+
 
 @app.route('/id', methods=['POST'])
 def song_by_id():
