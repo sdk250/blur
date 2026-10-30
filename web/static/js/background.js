@@ -15,7 +15,7 @@ export function createBackground(canvas) {
   addEventListener('resize', resize); resize();
 
   let palette = [[120, 100, 150], [90, 95, 135], [140, 105, 130], [85, 110, 140], [110, 90, 120]];
-  let base = [0, 0, 0], blend = 'lighter', boost = 0;
+  let base = [0, 0, 0], blend = 'lighter', boost = 0, alphaK = 0.55, radiusK = 1;
   const focus = { x: 0, y: 0 };            // 目标（屏幕中心为原点的像素）
   const vp = { x: 0, y: 0, vx: 0, vy: 0 }; // 隧道中心
   const blobs = Array.from({ length: MIST_COUNT }, (_, i) => ({ p: i / MIST_COUNT, a: Math.random() * Math.PI * 2, ci: i % 5 }));
@@ -41,8 +41,8 @@ export function createBackground(canvas) {
       const [ox, oy] = center(z);
       const d = M * 0.09 / z;                                // 透视：越近散得越快
       const x = ox + Math.cos(ang) * d, y = oy + Math.sin(ang) * d * 0.8;
-      const R = M * 0.06 / z;                                // 越近越大
-      ctx.globalAlpha = Math.sin(Math.PI * p) * 0.55;
+      const R = M * 0.06 / z * radiusK;                      // 越近越大
+      ctx.globalAlpha = Math.min(1, Math.sin(Math.PI * p) * alphaK);
       const g = ctx.createRadialGradient(x, y, 0, x, y, R);
       g.addColorStop(0, rgb(palette[b.ci])); g.addColorStop(1, 'transparent');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
@@ -53,7 +53,10 @@ export function createBackground(canvas) {
   return {
     focus, vp, step,
     /** 换一首歌：颜色直接到位（封面正挡着屏幕，不需要渐变） */
-    setTheme(theme, colors) { base = theme.base.slice(); blend = theme.blend; palette = colors.map(c => c.slice()); },
+    setTheme(theme) {
+      base = theme.base.slice(); blend = theme.blend; palette = theme.mist.map(c => c.slice());
+      alphaK = theme.mistAlpha; radiusK = theme.mistRadius;
+    },
     surge() { boost = 0.6; }, // 新歌词到来时往前带一下
     reset() { Object.assign(focus, { x: 0, y: 0 }); Object.assign(vp, { x: 0, y: 0, vx: 0, vy: 0 }); },
   };

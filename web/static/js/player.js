@@ -113,7 +113,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
   function applyCover(img) {
     const colors = paletteFromPixels(coverPixels(img));
     const theme = coverTheme(colors);
-    bg.setTheme(theme, colors);
+    bg.setTheme(theme);
     document.body.classList.toggle('light', !theme.dark);
     playerEl.style.setProperty('--lyric', rgb(theme.lyric));
     const g = theme.glow;

@@ -1,4 +1,5 @@
 // 封面取色：纯函数，不碰 DOM（读像素在调用方做）
+import { LIGHT_MIST, DARK_MIST } from './tune.js';
 
 const DEFAULT = [[120, 100, 150], [90, 95, 135], [140, 105, 130], [85, 110, 140], [110, 90, 120]];
 
@@ -76,12 +77,17 @@ export function paletteFromPixels(data) {
 /**
  * 由色雾色决定整体主题：色雾整体偏亮 -> 纯黑底 + 叠加发光；偏暗 -> 纯白底 + 正片叠底。
  * 歌词与光晕取第一个色雾色的色相。
+ * 白底时色雾按比例压暗（保留色相）、加浓加大，否则大片白底露出来，整个画面发白。
  */
 export function coverTheme(colors) {
   const dark = colors.reduce((a, c) => a + lum(c), 0) / colors.length > 0.5;
   const [h, s] = toHsl(colors[0]);
+  const darken = c => { const k = Math.min(1, LIGHT_MIST.maxLum / Math.max(lum(c), 1e-6)); return c.map(v => v * k); };
   return {
     dark,
+    mist: dark ? colors.map(c => c.slice()) : colors.map(darken),
+    mistAlpha: dark ? DARK_MIST.alpha : LIGHT_MIST.alpha,
+    mistRadius: dark ? DARK_MIST.radius : LIGHT_MIST.radius,
     base: dark ? [0, 0, 0] : [255, 255, 255],
     blend: dark ? 'lighter' : 'multiply',
     lyric: fromHsl([h, 0.3, dark ? 0.92 : 0.14]),

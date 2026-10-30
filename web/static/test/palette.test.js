@@ -46,3 +46,27 @@ test('toHsl / fromHsl 往返', () => {
 });
 
 test('rgb 取整', () => assert.equal(rgb([1.7, 2.2, 3.9]), 'rgb(1,2,3)'));
+
+const lumOf = c => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+
+test('白底：色雾压暗（亮度 ≤ 0.30）、更浓更大，画面不发白', () => {
+  const t = coverTheme([[60, 40, 50], [180, 150, 160], [90, 120, 80], [200, 200, 190], [70, 70, 90]]);
+  assert.equal(t.dark, false);
+  for (const c of t.mist) assert.ok(lumOf(c) <= 0.30 + 1e-6, `色雾太亮: ${c}`);
+  assert.equal(t.mistAlpha, 1.0);
+  assert.equal(t.mistRadius, 1.8);
+});
+
+test('白底压暗时保留色相', () => {
+  const t = coverTheme([[200, 120, 120], [200, 120, 120], [60, 40, 50], [60, 40, 50], [60, 40, 50]]);
+  assert.ok(Math.abs(toHsl(t.mist[0])[0] - toHsl([200, 120, 120])[0]) < 1);
+});
+
+test('黑底保持原样：色雾不变、浓度 0.55、大小 1 倍', () => {
+  const cols = fill([230, 200, 220]);
+  const t = coverTheme(cols);
+  assert.equal(t.dark, true);
+  assert.deepEqual(t.mist, cols);
+  assert.equal(t.mistAlpha, 0.55);
+  assert.equal(t.mistRadius, 1);
+});
