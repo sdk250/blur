@@ -201,12 +201,10 @@ def netease_song(song_id: int | str, level: str = DEFAULT_LEVEL) -> dict:
 
 
 def netease_search(key: str, level: str = DEFAULT_LEVEL) -> dict | None:
-    result = loads(session.get(
-        timeout=TIMEOUT,
-        url='https://music.163.com/api/search/get/web',
-        params={'s': key, 'type': 1, 'offset': 0, 'limit': 1},
-    ).content)
-    songs = result.get('result', {}).get('songs')
+    # 走 linux/forward：海外服务器直接访问网页搜索接口，result 会是一串加密字符串
+    result = netease('https://music.163.com/api/cloudsearch/pc', {'s': key, 'type': 1, 'offset': 0, 'limit': 1})
+    found = result.get('result')
+    songs = found.get('songs') if isinstance(found, dict) else None
     return netease_song(songs[0]['id'], level) if songs else None
 
 

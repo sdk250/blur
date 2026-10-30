@@ -104,3 +104,22 @@ def test_every_upstream_request_has_timeout(monkeypatch):
 def test_no_cross_origin_access(client):
     r = client.get('/top?limit=1', headers={'Origin': 'http://evil.example'})
     assert 'Access-Control-Allow-Origin' not in r.headers
+
+
+def test_search_goes_through_encrypted_forward(monkeypatch):
+    # 海外 IP 访问网页搜索接口会拿到加密字符串；搜索要和歌曲详情一样走 linux/forward
+    seen = []
+
+    def fake_netease(url, params):
+        seen.append((url, params))
+        return {'code': 200, 'result': {'songs': [{'id': 5}]}}
+    monkeypatch.setattr(api, 'netease', fake_netease)
+    monkeypatch.setattr(api, 'netease_song', lambda song_id, level='exhigh': {'id': song_id})
+    assert api.netease_search('海屿你') == {'id': 5}
+    assert seen[0][0] == 'https://music.163.com/api/cloudsearch/pc'
+    assert seen[0][1]['s'] == '海屿你' and seen[0][1]['type'] == 1
+
+
+def test_search_odd_response_is_not_found(monkeypatch):
+    monkeypatch.setattr(api, 'netease', lambda url, params: {'code': 200, 'result': '35b17489...'})
+    assert api.netease_search('x') is None
