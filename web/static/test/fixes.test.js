@@ -98,3 +98,24 @@ test('重建拼图时沿用原来的搜索格，且不重放浮现动画', async
     globalThis.document = realDocument;
   }
 });
+
+test('播放器：开始播放时标题是歌名，停止后变回 Blur', async () => {
+  const { createPlayer } = await import('../js/player.js');
+  const audio = { paused: true, volume: 1, play: async () => {}, pause() {}, load() {}, removeAttribute() {}, addEventListener() {} };
+  const stage = { clear() {}, measure: () => ({ w: 100, h: 40 }), defocusAll() {}, fit() {}, sweep() {}, show() {} };
+  const bg = { reset() {}, setTheme() {}, step() {}, focus: {}, vp: {} };
+  const realDocument = globalThis.document;
+  const cls = { add() {}, remove() {}, toggle() {}, contains: () => false };
+  globalThis.document = { title: '', body: { classList: cls }, createElement: () => { throw new Error('没有 canvas'); } };
+  // 歌名区域：matches(':hover') 为 false，闲置计时器跑一次就结束，不会无限重排
+  const titleEl = { classList: cls, matches: () => false, addEventListener() {}, contains: () => false, querySelector: () => ({ textContent: '', classList: cls }) };
+  try {
+    const p = createPlayer({ playerEl: { classList: cls, style: { setProperty() {} } }, titleEl, audio, stage, bg });
+    p.start({ name: '白山茶', art: ['陈雪凝'], data: 'x', lyric: null }, any());
+    assert.equal(document.title, '白山茶 · 陈雪凝');
+    p.stop();
+    assert.equal(document.title, 'Blur');
+  } finally {
+    globalThis.document = realDocument;
+  }
+});
