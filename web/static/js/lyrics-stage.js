@@ -5,6 +5,9 @@ import { tune, EXIT_MS } from './tune.js';
 
 const easeOut = t => 1 - Math.pow(1 - t, 3);
 
+// 模糊按字号缩放：数值是 64px 大字时定的，手机上字号缩到 28px，固定像素会糊得太重
+const blurFor = (line, px) => `blur(${px * (parseFloat(getComputedStyle(line).fontSize) || 64) / 64}px)`;
+
 // 一句歌词逐字拆成 span；换行后面是翻译，另起一行、字小一号
 function fillLine(wall, text) {
   wall.innerHTML = '';
@@ -74,9 +77,9 @@ export function createStage(el, bg) {
       { transform: `translate(${ly.x}px, ${ly.y}px) translateZ(0) scale(1)` },
     ], opt);
     wall.animate([
-      { opacity: 0, filter: 'blur(14px)' },
+      { opacity: 0, filter: blurFor(line, 14) },
       { opacity: 0.8, offset: 0.6 },
-      { opacity: 0.88, filter: 'blur(1.4px)' }, // 留一点模糊，融进背景
+      { opacity: 0.88, filter: blurFor(line, 1.4) }, // 留一点模糊，融进背景
     ], opt);
     const n = line._spans.length, fromRight = ly.x > 0; // 靠屏幕边的那一端先出来
     line._spans.forEach((sp, i) => {
@@ -110,7 +113,7 @@ export function createStage(el, bg) {
     const cs = getComputedStyle(wall);
     wall.animate([
       { opacity: cs.opacity, filter: cs.filter },
-      { opacity: 0, filter: 'blur(16px)' },
+      { opacity: 0, filter: blurFor(line, 16) },
     ], { duration: D, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
   }
 
