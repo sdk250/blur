@@ -1,5 +1,5 @@
 // 封面取色：纯函数，不碰 DOM（读像素在调用方做）
-import { LIGHT_MIST, DARK_MIST } from './tune.js';
+import { MIST } from './tune.js';
 
 const DEFAULT = [[120, 100, 150], [90, 95, 135], [140, 105, 130], [85, 110, 140], [110, 90, 120]];
 
@@ -74,23 +74,38 @@ export function paletteFromPixels(data) {
   return Array.from({ length: 5 }, (_, i) => mistColor(ranked[i % ranked.length]));
 }
 
+// 封面整体亮度（所有像素，含白边）：决定黑底还是白底
+function coverLum(data) {
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 4) sum += lum([data[i], data[i + 1], data[i + 2]]);
+  return sum / (data.length / 4);
+}
+
 /**
- * 由色雾色决定整体主题：色雾整体偏亮 -> 纯黑底 + 叠加发光；偏暗 -> 纯白底 + 正片叠底。
- * 歌词与光晕取第一个色雾色的色相。
- * 白底时色雾按比例压暗（保留色相）、加浓加大，否则大片白底露出来，整个画面发白。
+ * 背景主题，看封面本身的明暗（用户定的规则）：
+ *   封面偏暗 -> 纯黑底 + 叠加发光，色雾取封面色相、随机提成亮色，歌词浅色
+ *   封面偏亮 -> 纯白底 + 正片叠底，色雾取封面色相、随机压成暗色，歌词深色
+ * 几乎是灰色的颜色没有可用的色相，随机给一个，否则提亮后是一片灰白。
+ * data 为 null（读不到封面）时按偏暗处理。
  */
-export function coverTheme(colors) {
-  const dark = colors.reduce((a, c) => a + lum(c), 0) / colors.length > 0.5;
-  const [h, s] = toHsl(colors[0]);
-  const darken = c => { const k = Math.min(1, LIGHT_MIST.maxLum / Math.max(lum(c), 1e-6)); return c.map(v => v * k); };
+export function themeFromPixels(data, rand = Math.random) {
+  const dark = !data || !data.length || coverLum(data) <= 0.5;
+  const mist = paletteFromPixels(data).map(c => {
+    const [h0, s0] = toHsl(c);
+    const h = s0 < 0.15 ? rand() * 360 : h0;
+    const s = Math.max(0.45, Math.min(0.85, s0));
+    const l = dark ? 0.55 + rand() * 0.2 : 0.2 + rand() * 0.15;
+    return fromHsl([h, s, l]);
+  });
+  const [h, s] = toHsl(mist[0]);
   return {
     dark,
-    mist: dark ? colors.map(c => c.slice()) : colors.map(darken),
-    mistAlpha: dark ? DARK_MIST.alpha : LIGHT_MIST.alpha,
-    mistRadius: dark ? DARK_MIST.radius : LIGHT_MIST.radius,
     base: dark ? [0, 0, 0] : [255, 255, 255],
     blend: dark ? 'lighter' : 'multiply',
+    mist,
+    mistAlpha: MIST.alpha,
+    mistRadius: MIST.radius,
     lyric: fromHsl([h, 0.3, dark ? 0.92 : 0.14]),
-    glow: dark ? colors[0].slice() : fromHsl([h, s, 0.22]),
+    glow: dark ? mist[0].slice() : fromHsl([h, s, 0.22]),
   };
 }

@@ -17,6 +17,4 @@ export const FADE_TOGGLE_MS = 500; // 空格播放/暂停的音量淡入淡出
 export const FADE_IN_MS = 300;     // 进入/切歌时音乐淡入
 export const FADE_OUT_MS = 800;    // 返回/切歌时音乐淡出
 export const RECENT = 10;          // 随机下一曲避开最近几首
-// 白底时的色雾：压暗、更浓、更大，让画面“泛黑”而不是发白（模拟：画面平均亮度 0.90 -> 约 0.57）
-export const LIGHT_MIST = { maxLum: 0.30, alpha: 1.0, radius: 1.8 };
-export const DARK_MIST = { alpha: 0.55, radius: 1 };  // 黑底保持用户确认过的样子
+export const MIST = { alpha: 0.55, radius: 1 }; // 色雾每团最浓不透明度、大小倍数（用户最早确认的样子）

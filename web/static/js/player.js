@@ -1,6 +1,6 @@
 // 播放器：一首歌的状态、每帧驱动（背景 + 歌词）、音量淡入淡出、空格、闲置隐藏、左下角歌名
 import { tune, IDLE_MS, FADE_TOGGLE_MS } from './tune.js';
-import { paletteFromPixels, coverTheme, rgb } from './palette.js';
+import { themeFromPixels, rgb } from './palette.js';
 import { toLines, schedule, planPositions, lineAt } from './lyrics-plan.js';
 import { createRevealGuard } from './reveal-guard.js';
 import { pageTitle } from './page-title.js';
@@ -111,8 +111,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
 
   // ---------- 一首歌 ----------
   function applyCover(img) {
-    const colors = paletteFromPixels(coverPixels(img));
-    const theme = coverTheme(colors);
+    const theme = themeFromPixels(coverPixels(img));
     bg.setTheme(theme);
     document.body.classList.toggle('light', !theme.dark);
     playerEl.style.setProperty('--lyric', rgb(theme.lyric));
