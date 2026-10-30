@@ -19,7 +19,7 @@ from random import choice, randrange
 from re import IGNORECASE, compile
 
 from Crypto.Cipher import AES
-from flask import Flask, Response, request
+from flask import Flask, Response, abort, request, send_file
 from requests import Session
 
 HERE = path.dirname(__file__)
@@ -263,6 +263,75 @@ def kuwo_search(key: str) -> dict | None:
     )
 
 
+# ---------- 彩蛋：本地歌 ----------
+# 搜索框里准确输入关键词，就播放 assets/ 里的本地歌（文件不在时彩蛋不生效，照常搜索）
+
+ASSETS = path.join(HERE, '..', 'assets')
+LOCAL = {
+    'local-baishancha': dict(key='白山茶', file='陈雪凝 - 白山茶', name='白山茶', art=['陈雪凝']),
+}
+
+
+def local_files(song_id: str) -> tuple[str, str] | None:
+    entry = LOCAL.get(song_id)
+    if not entry:
+        return None
+    flac, lrc = (path.join(ASSETS, entry['file'] + ext) for ext in ('.flac', '.lrc'))
+    return (flac, lrc) if path.isfile(flac) and path.isfile(lrc) else None
+
+
+def local_song(song_id: str) -> dict | None:
+    files = local_files(song_id)
+    if not files:
+        return None
+    with open(files[1], encoding='UTF-8') as f:
+        lyric = parse_lrc([f.read()])
+    entry = LOCAL[song_id]
+    return dict(
+        id=song_id, name=entry['name'], art=entry['art'],
+        data=f'/local/{song_id}/audio', picture=f'/local/{song_id}/cover', lyric=lyric,
+    )
+
+
+def flac_picture(file: str) -> tuple[str, bytes] | None:
+    """读 FLAC 元数据里的 PICTURE 块（类型 6），返回 (mime, 图片字节)。"""
+    with open(file, 'rb') as f:
+        if f.read(4) != b'fLaC':
+            return None
+        while True:
+            head = f.read(4)
+            if len(head) < 4:
+                return None
+            kind, size = head[0] & 0x7f, int.from_bytes(head[1:], 'big')
+            block = f.read(size)
+            if kind == 6:
+                p = 4
+                n = int.from_bytes(block[p:p + 4], 'big'); p += 4
+                mime = block[p:p + n].decode(); p += n
+                p += 4 + int.from_bytes(block[p:p + 4], 'big') + 16   # 描述 + 宽高色深
+                n = int.from_bytes(block[p:p + 4], 'big'); p += 4
+                return mime, block[p:p + n]
+            if head[0] & 0x80:
+                return None
+
+
+@app.route('/local/<song_id>/audio', methods=['GET'])
+def local_audio(song_id):
+    files = local_files(song_id)
+    if not files:
+        abort(404)
+    return send_file(files[0], mimetype='audio/flac', conditional=True)  # conditional：支持 Range，能拖动/续传
+
+
+@app.route('/local/<song_id>/cover', methods=['GET'])
+def local_cover(song_id):
+    files = local_files(song_id)
+    pic = files and flac_picture(files[0])
+    if not pic:
+        abort(404)
+    return Response(pic[1], mimetype=pic[0])
+
+
 # ---------- 路由 ----------
 
 @app.route('/', methods=['GET'])
@@ -273,6 +342,9 @@ def index():
 @app.route('/id', methods=['POST'])
 def song_by_id():
     song_id = request.form.get('songid') or choice(TOP)['id']
+    if str(song_id).startswith('local-'):
+        song = local_song(song_id)
+        return json_response(song) if song else json_response({'msg': '没有这首本地歌'}, 404)
     try:
         return json_response(netease_song(song_id, request.form.get('level') or DEFAULT_LEVEL))
     except Exception as e:
@@ -287,6 +359,9 @@ def search():
         key, platform = key[1:].strip(), 'netease'
     if not key:
         return json_response({'msg': '缺少关键词'}, 400)
+    for song_id, entry in LOCAL.items():  # 彩蛋
+        if key == entry['key'] and (song := local_song(song_id)):
+            return json_response(song)
     if platform not in ('netease', 'kuwo'):
         return json_response({'msg': f'不支持的平台: {platform}'}, 400)
     try:
