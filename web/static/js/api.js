@@ -1,4 +1,4 @@
-// 后端接口（同源）。非 2xx 时抛出 Error(后端给的 msg)
+// 后端接口（同源、相对路径：网站可能挂在 /blur/ 这类子路径下）。非 2xx 时抛出 Error(后端给的 msg)
 
 /** 封面一律用 200px 小图：拼图、搜索格、放大铺满都用它，带宽留给音乐 */
 export const smallCover = url => (url && url.includes('music.126.net') ? `${url}?param=200y200` : url);
@@ -13,6 +13,6 @@ const TIMEOUT_MS = 20000;
 const signal = () => AbortSignal.timeout(TIMEOUT_MS);
 const post = (path, form) => fetch(path, { method: 'POST', body: new URLSearchParams(form), signal: signal() }).then(json);
 
-export const fetchTop = (limit = 100) => fetch(`/top?limit=${limit}`, { signal: signal() }).then(json);
-export const fetchSong = id => post('/id', { songid: id });
-export const searchSong = key => post('/key', { key, platform: 'netease' });
+export const fetchTop = (limit = 100) => fetch(`top?limit=${limit}`, { signal: signal() }).then(json);
+export const fetchSong = id => post('id', { songid: id });
+export const searchSong = key => post('key', { key, platform: 'netease' });

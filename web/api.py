@@ -13,7 +13,7 @@
 """
 from binascii import hexlify, unhexlify
 from json import dumps, loads
-from os import path
+from os import environ, path
 from hashlib import md5
 from random import choice, randrange
 from re import IGNORECASE, compile
@@ -289,7 +289,7 @@ def local_song(song_id: str) -> dict | None:
     entry = LOCAL[song_id]
     return dict(
         id=song_id, name=entry['name'], art=entry['art'],
-        data=f'/local/{song_id}/audio', picture=f'/local/{song_id}/cover', lyric=lyric,
+        data=f'local/{song_id}/audio', picture=f'local/{song_id}/cover', lyric=lyric,  # 相对路径：可挂在子路径下
     )
 
 
@@ -373,4 +373,5 @@ def search():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', 20800, debug=False)
+    # 本地开发：python api.py；线上用 gunicorn（见 deploy/）
+    app.run(environ.get('BLUR_HOST', '0.0.0.0'), int(environ.get('BLUR_PORT', 20800)), debug=False)

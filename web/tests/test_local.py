@@ -32,8 +32,9 @@ def test_search_easter_egg_returns_local_song(client, assets):
     s = r.get_json()
     assert s['id'] == 'local-baishancha'
     assert s['name'] == '白山茶' and s['art'] == ['陈雪凝']
-    assert s['data'] == '/local/local-baishancha/audio'
-    assert s['picture'] == '/local/local-baishancha/cover'
+    # 相对路径：网站可能挂在 /blur/ 这类子路径下
+    assert s['data'] == 'local/local-baishancha/audio'
+    assert s['picture'] == 'local/local-baishancha/cover'
     assert s['lyric']['ms'][0] == {'t': 31.91, 'c': '我不是在等你'}
 
 

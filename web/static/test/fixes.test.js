@@ -22,6 +22,8 @@ test('浏览器请求带超时信号', async () => {
   fetchTop(); fetchSong(1); searchSong('k');
   assert.equal(calls.length, 3);
   for (const c of calls) assert.ok(c.opts.signal, `${c.url} 没有超时`);
+  // 相对路径：网站可能挂在 /blur/ 这类子路径下
+  assert.deepEqual(calls.map(c => c.url), ['top?limit=100', 'id', 'key']);
 });
 
 test('转场中途出错也会释放锁', async () => {
@@ -38,17 +40,20 @@ test('转场中途出错也会释放锁', async () => {
 test('从搜索格进入时重新取链接（链接会过期）', async () => {
   const realDocument = globalThis.document;
   globalThis.document = { createElement: () => fakeEl() };
-  const requested = [];
-  globalThis.fetch = (url, opts = {}) => { requested.push(url + ' ' + (opts.body ?? '')); return new Promise(() => {}); };
-  const { buildMosaic } = await import('../js/mosaic.js');
-  let picked = null;
-  const m = buildMosaic(fakeEl(), [], { onPick: (t, get) => { picked = get; }, toast() {} });
-  m.searchTile.show({ id: 42, name: 'n', art: ['a'], picture: 'https://p1.music.126.net/x.jpg', data: 'https://old-link' });
-  m.searchTile.onclick({ target: fakeEl() });
-  assert.ok(picked, '没有触发进入');
-  picked();
-  assert.ok(requested.some(r => r.startsWith('/id') && r.includes('songid=42')), requested.join(' | '));
-  globalThis.document = realDocument;
+  try {
+    const requested = [];
+    globalThis.fetch = (url, opts = {}) => { requested.push(url + ' ' + (opts.body ?? '')); return new Promise(() => {}); };
+    const { buildMosaic } = await import('../js/mosaic.js');
+    let picked = null;
+    const m = buildMosaic(fakeEl(), [], { onPick: (t, get) => { picked = get; }, toast() {} });
+    m.searchTile.show({ id: 42, name: 'n', art: ['a'], picture: 'https://p1.music.126.net/x.jpg', data: 'https://old-link' });
+    m.searchTile.onclick({ target: fakeEl() });
+    assert.ok(picked, '没有触发进入');
+    picked();
+    assert.ok(requested.some(r => r.startsWith('id ') && r.includes('songid=42')), requested.join(' | '));
+  } finally {
+    globalThis.document = realDocument;
+  }
 });
 
 test('转场进行中再点别的按钮，不会提前解锁正在进行的转场', async () => {
