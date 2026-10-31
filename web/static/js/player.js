@@ -16,7 +16,7 @@ function coverPixels(img) {
   }
 }
 
-export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
+export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
   let lines = [], idx = -1, active = false, playing = false, fadeId = 0, song = null;
   const syncTitle = () => { document.title = pageTitle(song, lines, idx); };
 
@@ -60,6 +60,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
   requestAnimationFrame(frame);
 
   // ---------- 音量淡入淡出：从当前音量缓到目标，连按时接着当前音量继续 ----------
+  // 用定时器而不是 requestAnimationFrame：锁屏/切到后台时 rAF 停了，耳机按暂停会永远停不下来
   function fadeVolume(to, ms) {
     const id = ++fadeId, v0 = audio.volume, t0 = performance.now();
     return new Promise(done => {
@@ -67,13 +68,18 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
         if (id !== fadeId) return done(false);
         const k = Math.min(1, (performance.now() - t0) / ms);
         audio.volume = v0 + (to - v0) * k;
-        k < 1 ? requestAnimationFrame(stepVol) : done(true);
+        k < 1 ? setTimeout(stepVol, 16) : done(true);
       };
       stepVol();
     });
   }
   // 播放/暂停按钮显示哪个符号
-  const syncIcon = () => titleEl.classList.toggle('is-playing', playing);
+  const syncIcon = () => { titleEl.classList.toggle('is-playing', playing); media?.setPlaying(playing); };
+
+  // 不是我们发起的暂停（拔耳机、别的应用抢了声音）：同步状态，否则下一次空格/耳机键会反着来
+  audio.addEventListener('pause', () => {
+    if (playing && !audio.ended) { fadeId++; playing = false; syncIcon(); }
+  });
 
   async function fadePlay(ms) {
     playing = true; syncIcon();
@@ -160,6 +166,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
       titleEl.querySelector('.name').textContent = `${song.name} · ${song.art.join(' / ')}`;
       syncTitle();
       wake();
+      media?.setSong(song);
       audio.src = song.data;
     },
 
@@ -171,6 +178,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
       stage.clear(); lines = []; idx = -1;
       document.body.classList.remove('light');
       song = null; syncTitle();
+      media?.setSong(null);
     },
 
     /** 切歌开始：歌词全部退场、不再出新句；失败时 resumeLyrics 恢复原来那首已规划好的歌词 */
@@ -178,7 +186,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg }) {
     resumeLyrics(saved) { lines = saved; idx = -1; },
 
     onEnded(fn) { audio.addEventListener('ended', fn); },
-    setPrevEnabled(on) { prevBtn.classList.toggle('off', !on); },
+    setPrevEnabled(on) { prevBtn.classList.toggle('off', !on); media?.setCanPrev(on); },
   };
   return self;
 }

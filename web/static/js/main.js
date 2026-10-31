@@ -8,6 +8,7 @@ import { createTransitions } from './transition.js';
 import { Navigator } from './navigation.js';
 import { shouldRebuild } from './resize-policy.js';
 import { createLongPress, toggleFullscreen } from './fullscreen.js';
+import { createMediaSession } from './media-session.js';
 
 const $ = id => document.getElementById(id);
 const home = $('home'), playerEl = $('player'), titleEl = $('title');
@@ -20,7 +21,8 @@ function toast(msg) {
 
 const bg = createBackground($('bg'));
 const stage = createStage($('stage'), bg);
-const player = createPlayer({ playerEl, titleEl, audio: $('audio'), stage, bg });
+const media = createMediaSession();
+const player = createPlayer({ playerEl, titleEl, audio: $('audio'), stage, bg, media });
 const nav = new Navigator([]);
 let mosaic = null;
 const tr = createTransitions({ home, player, nav, mosaic: () => mosaic, toast });
@@ -31,6 +33,14 @@ titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
 titleEl.querySelector('.split').onclick = () => { if (!tr.busy) player.setSplit(!player.split); };
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
+
+// 耳机按键 / 锁屏 / 键盘媒体键：和页面上的按钮走同一套逻辑（转场进行中不响应）
+media.bind({
+  play: () => { if (player.active && !tr.busy && !player.playing) player.toggle(); },
+  pause: () => { if (player.active && !tr.busy && player.playing) player.toggle(); },
+  previoustrack: () => tr.switchTo('prev'),
+  nexttrack: () => tr.switchTo('next'),
+});
 
 // 长按播放页背景（歌名那一块除外）：进入 / 退出全屏
 const longPress = createLongPress(() => {

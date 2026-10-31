@@ -13,6 +13,12 @@ const box = r => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px
 // 格子在首页里绝对定位、首页铺满视口，所以 style 就是它在屏幕上的位置（首页缩小时也不受影响）
 const rectOf = t => ({ left: parseFloat(t.style.left), top: parseFloat(t.style.top), width: parseFloat(t.style.width), height: parseFloat(t.style.height) });
 
+// 页面在后台（锁屏、切走）时动画不走，等它结束会卡住切歌：后台建的动画直接跳到结尾，切到后台时正在放的也跳到结尾
+const run = (el, keyframes, opts) => { const a = el.animate(keyframes, opts); if (document.hidden) a.finish(); return a; };
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) document.querySelectorAll('#ghost').forEach(g => g.getAnimations().forEach(a => a.finish()));
+});
+
 function makeGhost(src, rect, extra = {}) {
   const g = document.createElement('img');
   g.id = 'ghost'; g.crossOrigin = 'anonymous'; g.src = src;
@@ -22,14 +28,14 @@ function makeGhost(src, rect, extra = {}) {
 }
 
 // 化开：越来越糊、略微放大、淡掉，下面的色雾露出来
-const dissolve = g => g.animate([
+const dissolve = g => run(g, [
   { filter: 'blur(0px)', opacity: 1, transform: 'scale(1)' },
   { filter: 'blur(30px)', opacity: 0.85, offset: 0.4 },
   { filter: 'blur(70px)', opacity: 0, transform: 'scale(1.15)' },
 ], { duration: 1800, easing: 'ease-in-out', fill: 'forwards' }).finished;
 
 // 凝出：反过来，从一团雾变回清晰封面
-const condense = g => g.animate([
+const condense = g => run(g, [
   { filter: 'blur(70px)', opacity: 0, transform: 'scale(1.15)' },
   { filter: 'blur(0px)', opacity: 1, transform: 'scale(1)' },
 ], { duration: 900, easing: 'ease-out', fill: 'forwards' }).finished;
@@ -43,7 +49,7 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
   async function shrinkTo(ghost, tile) {
     const cur = ghost.getBoundingClientRect(), rect = rectOf(tile);
     ghost.getAnimations().forEach(a => { a.commitStyles(); a.cancel(); });
-    await ghost.animate([
+    await run(ghost, [
       { ...box(cur), borderRadius: '0px' },
       { ...box(rect), borderRadius: '6px' },
     ], { duration: 700, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' }).finished;
@@ -72,7 +78,7 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
     tile.style.visibility = 'hidden'; hidden = tile;
 
     const songP = getSong();
-    const grow = ghost.animate([
+    const grow = run(ghost, [
       { ...box(rect), borderRadius: '6px' },
       { ...box(square()), borderRadius: '0px' },
     ], { duration: 800, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' });
