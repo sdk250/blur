@@ -141,9 +141,19 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
     ghost.remove(); lock(false);
   }
 
+  // 读一张封面（取色用）；读不到也不报错，取色会退回默认色
+  async function coverImg(song) {
+    const img = new Image(); img.crossOrigin = 'anonymous'; img.src = smallCover(song.picture);
+    await img.decode().catch(() => {});
+    return img;
+  }
+
+  // 切歌：歌词退场、新封面从色雾凝出、马上化开进新歌，全程不等请求；详情回来再装歌词和音源。
+  // 拿不到能放的歌：凝回原来那首的封面再化开，原来那首从暂停处接着放
   async function switchTo(kind) {
     if (busy || !nav.current || (kind === 'prev' && !nav.canPrev)) return; lock(true);
-    const saved = player.suspendLyrics();
+    const old = nav.current;
+    player.suspendLyrics();
     player.fadePause(FADE_OUT_MS);
 
     // 要换成哪首：上一曲取历史；下一曲先沿原路，否则随机（拿不到链接就换一首随机，最多 3 次）
@@ -152,28 +162,43 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
 
     let song = null, cand = plan.target;
     const maxTries = kind === 'prev' ? 1 : plan.fromForward ? 4 : 3;
-    const fetchIt = async () => {
+    const job = (async () => {
       for (let i = 0; i < maxTries && !song; i++) {
         try { const s = await fetchSong(cand.id); if (s.data) song = s; } catch { /* 换下一首 */ }
-        if (!song && kind === 'next') { cand = nav.pickRandom(); ghost.src = smallCover(cand.picture); }
+        if (!song && kind === 'next') cand = nav.pickRandom();
       }
-    };
-    await Promise.all([fetchIt(), condense(ghost)]);
+    })();
+    let done = false; job.then(() => { done = true; });
 
-    if (!song) {
-      toast(kind === 'prev' ? '上一曲暂时放不了' : '没有找到能播放的歌');
-      player.resumeLyrics(saved);
-      player.fadePlay(500).catch(() => {});
-    } else {
+    await condense(ghost);
+    if (!ghost.complete) await ghost.decode().catch(() => {});
+    let d = null;
+    if (!(done && !song)) { // 还没回来或已经成功：先进新歌的画面
+      player.start({ ...plan.target, data: null, lyric: null }, ghost);
+      d = dissolve(ghost);
+    }
+    await job;
+
+    if (song) {
       if (kind === 'prev') nav.commitPrev(song);
       else nav.commitNext(song, plan.fromForward, plan.target);
-      if (!ghost.complete) await ghost.decode().catch(() => {});
-      player.start(song, ghost);
+      if (song.id !== plan.target.id) player.recolor(await coverImg(song)); // 换成了随机的另一首
+      player.load(song);
       player.setPrevEnabled(nav.canPrev);
       startMusic();
+    } else {
+      toast(kind === 'prev' ? '上一曲暂时放不了' : '没有找到能播放的歌');
+      ghost.getAnimations().forEach(a => a.cancel()); // 回到透明
+      ghost.src = smallCover(old.picture);
+      await ghost.decode().catch(() => {});
+      await condense(ghost);
+      player.start(old, ghost); // 同一个音源不重新加载，从暂停处继续
+      player.setPrevEnabled(nav.canPrev);
+      player.fadePlay(500).catch(() => {});
+      d = dissolve(ghost);
     }
-    await dissolve(ghost).finished;
-    ghost.remove(); lock(false);
+    await d.finished;
+    ghost.remove();
   }
 
   return { enter: guarded(enter), leave: guarded(leave), switchTo: guarded(switchTo), get busy() { return busy; } };

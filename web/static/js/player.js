@@ -17,7 +17,7 @@ function coverPixels(img) {
 }
 
 export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
-  let lines = [], idx = -1, active = false, playing = false, fadeId = 0, song = null;
+  let lines = [], idx = -1, active = false, playing = false, fadeId = 0, song = null, loadedSrc = null;
   const syncTitle = () => { document.title = pageTitle(song, lines, idx); };
 
   // 空格拆句开关：默认开，记在浏览器里
@@ -175,12 +175,13 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
       titleEl.querySelector('.name').textContent = `${song.name} · ${song.art.join(' / ')}`;
       syncTitle();
       media?.setSong(song);
-      if (song.data) audio.src = song.data;
+      // 同一首（切歌失败回到原来那首）不重新加载，接着原来的位置放
+      if (song.data && song.data !== loadedSrc) audio.src = loadedSrc = song.data;
     },
 
     stop() {
       fadeId++; playing = false; syncIcon();
-      audio.pause(); audio.removeAttribute('src'); audio.load();
+      audio.pause(); audio.removeAttribute('src'); audio.load(); loadedSrc = null;
       active = false;
       playerEl.classList.remove('on');
       stage.clear(); lines = []; idx = -1;
@@ -189,11 +190,12 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
       media?.setSong(null);
     },
 
-    /** 切歌开始：歌词全部退场、不再出新句；失败时 resumeLyrics 恢复原来那首已规划好的歌词 */
-    suspendLyrics() { const saved = lines; lines = []; stage.defocusAll(); return saved; },
-    resumeLyrics(saved) { lines = saved; idx = -1; },
+    /** 切歌开始：歌词全部退场、不再出新句 */
+    suspendLyrics() { lines = []; stage.defocusAll(); },
 
     onEnded(fn) { audio.addEventListener('ended', fn); },
+    /** 只换配色（换成了另一首歌的封面时） */
+    recolor(img) { applyCover(img); },
     setPrevEnabled(on) { prevBtn.classList.toggle('off', !on); media?.setCanPrev(on); },
   };
   return self;
