@@ -1,4 +1,4 @@
-// 首页拼图：大小不一的封面墙，正中是搜索格。点封面 -> onPick(格子, 取歌函数)
+// 首页拼图：大小不一的封面墙，正中是搜索格。点封面 -> onPick(格子, 取歌函数, 已知的歌名/歌手/封面)
 import { layoutMosaic } from './mosaic-layout.js';
 import { smallCover, fetchSong, searchSong } from './api.js';
 
@@ -40,7 +40,7 @@ function makeSearchTile(onPick, toast) {
     }
   };
   // 点封面（不是点输入框）就进入；重新取一次，搜索时拿到的链接可能已经过期
-  t.onclick = e => { if (found && !e.target.closest('form')) onPick(t, () => fetchSong(found.id)); };
+  t.onclick = e => { if (found && !e.target.closest('form')) onPick(t, () => fetchSong(found.id), found); };
   t.show = show; // 返回时当前歌不在拼图里，就让搜索格变成它
   return t;
 }
@@ -69,7 +69,7 @@ export function buildMosaic(homeEl, songs, { onPick, toast, searchTile: keep = n
     t.innerHTML = '<img alt=""><div class="cap"></div>';
     t.querySelector('.cap').textContent = `${song.name} · ${song.art.join(' / ')}`;
     loadImg(t.querySelector('img'), smallCover(song.picture));
-    t.onclick = () => onPick(t, () => fetchSong(song.id));
+    t.onclick = () => onPick(t, () => fetchSong(song.id), song);
     if (!tileOf.has(song.id)) tileOf.set(song.id, t);
     place(t, rect);
     all.push(t);

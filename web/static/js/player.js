@@ -154,20 +154,28 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
       if (active && song) { stage.defocusAll(); planSong(); idx = -1; }
     },
 
-    /** 在封面挡着屏幕时调用：取色、规划歌词、换歌名、换音源（不自动播放） */
+    /**
+     * 在封面挡着屏幕时调用：取色、换歌名；next 带播放链接和歌词时一并装上（不自动播放）。
+     * 进入时先用拼图里已知的歌名/封面打开播放页，歌的详情回来后再 load
+     */
     start(next, coverImg) {
-      song = next;
-      stage.clear(); idx = -1;
+      stage.clear();
       bg.reset();
       applyCover(coverImg);
       active = true;
       playerEl.classList.add('on');
+      wake();
+      self.load(next);
+    },
+
+    /** 装上一首歌的歌词、歌名和音源（没有播放链接时只换歌名） */
+    load(next) {
+      song = next; idx = -1;
       planSong();
       titleEl.querySelector('.name').textContent = `${song.name} · ${song.art.join(' / ')}`;
       syncTitle();
-      wake();
       media?.setSong(song);
-      audio.src = song.data;
+      if (song.data) audio.src = song.data;
     },
 
     stop() {

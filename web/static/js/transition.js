@@ -27,12 +27,12 @@ function makeGhost(src, rect, extra = {}) {
   return g;
 }
 
-// 化开：越来越糊、略微放大、淡掉，下面的色雾露出来
+// 化开：越来越糊、略微放大、淡掉，下面的色雾露出来（返回动画本身，进入失败时要倒着放回去）
 const dissolve = g => run(g, [
   { filter: 'blur(0px)', opacity: 1, transform: 'scale(1)' },
   { filter: 'blur(30px)', opacity: 0.85, offset: 0.4 },
   { filter: 'blur(70px)', opacity: 0, transform: 'scale(1.15)' },
-], { duration: 1800, easing: 'ease-in-out', fill: 'forwards' }).finished;
+], { duration: 1800, easing: 'ease-in-out', fill: 'forwards' });
 
 // 凝出：反过来，从一团雾变回清晰封面
 const condense = g => run(g, [
@@ -70,38 +70,54 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
     try { await fn(...args); } catch (err) { recover(err); } finally { lock(false); }
   };
 
-  async function enter(tile, getSong) {
+  // 进入失败：封面缩回格子，首页回来
+  async function backToTile(ghost, tile, err) {
+    toast(err.message);
+    home.classList.remove('away');
+    await shrinkTo(ghost, tile);
+    tile.style.visibility = ''; hidden = null;
+    ghost.remove();
+  }
+
+  // 点封面：立刻请求歌的详情，同时放大；放大完就化开进播放页，不等请求。
+  // 歌名、封面取色用拼图里已有的；详情回来再装歌词和音源。失败就把化开倒放回封面、缩回格子
+  async function enter(tile, getSong, info) {
     if (busy) return; lock(true);
     const cover = tile.querySelector('img');
     const rect = rectOf(tile);
     const ghost = makeGhost(cover.src, rect);
     tile.style.visibility = 'hidden'; hidden = tile;
 
-    const songP = getSong();
+    let outcome = null;
+    const songP = Promise.resolve().then(getSong)
+      .then(s => { if (!s.data) throw new Error('这首歌暂时没有播放链接'); return s; })
+      .then(song => (outcome = { song }), err => (outcome = { err }));
     const grow = run(ghost, [
       { ...box(rect), borderRadius: '6px' },
       { ...box(square()), borderRadius: '0px' },
     ], { duration: 800, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' });
     home.classList.add('away');
 
-    let song;
-    try {
-      [song] = await Promise.all([songP, grow.finished]);
-      if (!song.data) throw new Error('这首歌暂时没有播放链接');
-    } catch (err) {
-      toast(err.message);
-      home.classList.remove('away');
-      await shrinkTo(ghost, tile);
-      tile.style.visibility = ''; hidden = null;
-      ghost.remove(); lock(false);
-      return;
+    await grow.finished;
+    // 放大期间就已经失败了：不用化开，直接缩回
+    if (outcome?.err) return backToTile(ghost, tile, outcome.err);
+
+    player.start({ ...info, data: null, lyric: null }, cover); // 搜索格里的歌带着旧链接，别先装上
+    player.setPrevEnabled(nav.canPrev);
+    const d = dissolve(ghost);
+    await songP;
+    if (outcome.err) {
+      // 化开还没完就倒着放回去，已经化完就从色雾凝回封面
+      if (d.playState === 'running') { d.reverse(); if (document.hidden) d.finish(); await d.finished; d.cancel(); } else await condense(ghost);
+      player.stop();
+      return backToTile(ghost, tile, outcome.err);
     }
-    nav.enter(song);
-    player.start(song, cover);
+    nav.enter(outcome.song);
+    player.load(outcome.song);
     player.setPrevEnabled(nav.canPrev);
     startMusic();
-    await dissolve(ghost);
-    ghost.remove(); lock(false);
+    await d.finished;
+    ghost.remove(); // 解锁由 guarded 负责
   }
 
   async function leave() {
@@ -156,7 +172,7 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
       player.setPrevEnabled(nav.canPrev);
       startMusic();
     }
-    await dissolve(ghost);
+    await dissolve(ghost).finished;
     ghost.remove(); lock(false);
   }
 
