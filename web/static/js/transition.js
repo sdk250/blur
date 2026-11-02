@@ -150,21 +150,23 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
 
   // 切歌：歌词退场、新封面从色雾凝出、马上化开进新歌，全程不等请求；详情回来再装歌词和音源。
   // 拿不到能放的歌：凝回原来那首的封面再化开，原来那首从暂停处接着放
-  async function switchTo(kind) {
+  // kind: 'prev' | 'next' | 'pick'（搜到的歌 picked，带着刚拿到的播放链接）
+  async function switchTo(kind, picked) {
     if (busy || !nav.current || (kind === 'prev' && !nav.canPrev)) return; lock(true);
     const old = nav.current;
     player.suspendLyrics();
     player.fadePause(FADE_OUT_MS);
 
     // 要换成哪首：上一曲取历史；下一曲先沿原路，否则随机（拿不到链接就换一首随机，最多 3 次）
-    const plan = kind === 'prev' ? { target: nav.planPrev(), fromForward: false } : nav.planNext();
+    const plan = kind === 'prev' ? { target: nav.planPrev(), fromForward: false }
+      : kind === 'pick' ? { target: picked, fromForward: false } : nav.planNext();
     const ghost = makeGhost(smallCover(plan.target.picture), square(), { borderRadius: '0px', opacity: 0 });
 
     let song = null, cand = plan.target;
-    const maxTries = kind === 'prev' ? 1 : plan.fromForward ? 4 : 3;
+    const maxTries = kind !== 'next' ? 1 : plan.fromForward ? 4 : 3;
     const job = (async () => {
       for (let i = 0; i < maxTries && !song; i++) {
-        try { const s = await fetchSong(cand.id); if (s.data) song = s; } catch { /* 换下一首 */ }
+        try { const s = kind === 'pick' && picked.data ? picked : await fetchSong(cand.id); if (s.data) song = s; } catch { /* 换下一首 */ }
         if (!song && kind === 'next') cand = nav.pickRandom();
       }
     })();
@@ -181,13 +183,14 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
 
     if (song) {
       if (kind === 'prev') nav.commitPrev(song);
+      else if (kind === 'pick') nav.commitPick(song);
       else nav.commitNext(song, plan.fromForward, plan.target);
       if (song.id !== plan.target.id) player.recolor(await coverImg(song)); // 换成了随机的另一首
       player.load(song);
       player.setPrevEnabled(nav.canPrev);
       startMusic();
     } else {
-      toast(kind === 'prev' ? '上一曲暂时放不了' : '没有找到能播放的歌');
+      toast(kind === 'prev' ? '上一曲暂时放不了' : kind === 'pick' ? '这首歌暂时没有播放链接' : '没有找到能播放的歌');
       ghost.getAnimations().forEach(a => a.cancel()); // 回到透明
       ghost.src = smallCover(old.picture);
       await ghost.decode().catch(() => {});

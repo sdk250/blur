@@ -49,6 +49,13 @@ export class Navigator {
     this.current = song;
   }
 
+  /** 搜索后直接播放：当前这首进历史，走了新路，前进栈清空 */
+  commitPick(song) {
+    if (this.current) this.history.push(this.current);
+    this.forward.length = 0;
+    this.current = song;
+  }
+
   commitPrev(song) {
     this.history.pop();
     if (this.current) this.forward.push(this.current);

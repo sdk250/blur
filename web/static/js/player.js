@@ -34,6 +34,8 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
     planPositions(lines, text => stage.measure(text), { w: innerWidth, h: innerHeight });
   }
   const prevBtn = titleEl.querySelector('.prev');
+  const queryEl = titleEl.querySelector('.q');
+  const typing = () => titleEl.contains(document.activeElement) && document.activeElement === queryEl;
 
   // ---------- 每帧 ----------
   let last = performance.now();
@@ -101,7 +103,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
 
   // ---------- 空格 ----------
   addEventListener('keydown', e => {
-    if (e.code !== 'Space' || !active || self.busy) return; // 转场进行中不响应
+    if (e.code !== 'Space' || !active || self.busy || typing()) return; // 转场进行中、在输入框里打字时不响应
     e.preventDefault();
     toggle();
   });
@@ -112,7 +114,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
     playerEl.classList.remove('idle');
     clearTimeout(idleTimer);
     idleTimer = setTimeout(function hide() {
-      if (titleEl.matches(':hover') && matchMedia('(hover: hover)').matches) { idleTimer = setTimeout(hide, 500); return; }
+      if (typing() || (titleEl.matches(':hover') && matchMedia('(hover: hover)').matches)) { idleTimer = setTimeout(hide, 500); return; }
       playerEl.classList.add('idle');
       titleEl.classList.remove('open');
     }, IDLE_MS);
@@ -173,6 +175,7 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
       song = next; idx = -1;
       planSong();
       titleEl.querySelector('.name').textContent = `${song.name} · ${song.art.join(' / ')}`;
+      if (!typing()) queryEl.value = song.name;
       syncTitle();
       media?.setSong(song);
       // 同一首（切歌失败回到原来那首）不重新加载，接着原来的位置放

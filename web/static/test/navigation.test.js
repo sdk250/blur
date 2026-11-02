@@ -85,3 +85,14 @@ test('只 plan 不 commit（切歌失败）不改动栈', () => {
   assert.equal(nav.planNext().target.id, a.target.id);
   assert.equal(nav.canPrev, false);
 });
+
+test('搜索直接播放：当前这首进历史，前进栈清空，上一曲能回来', () => {
+  const nav = new Navigator(pool(20), seeded(3));
+  nav.enter(S(0));
+  next(nav); prev(nav); // 前进栈里有一首
+  assert.equal(nav.planNext().fromForward, true);
+  nav.commitPick(S(99));
+  assert.equal(nav.current.id, 99);
+  assert.equal(nav.planNext().fromForward, false);
+  assert.equal(prev(nav).id, 0);
+});

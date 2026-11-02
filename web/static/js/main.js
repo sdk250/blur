@@ -1,5 +1,5 @@
 // 启动与组装
-import { fetchTop } from './api.js';
+import { fetchTop, searchSong } from './api.js';
 import { createBackground } from './background.js';
 import { createStage } from './lyrics-stage.js';
 import { createPlayer } from './player.js';
@@ -32,6 +32,27 @@ titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
 titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
 titleEl.querySelector('.split').onclick = () => { if (!tr.busy) player.setSplit(!player.split); };
+
+// 左下角歌名输入框：改成想听的，回车搜索，搜到就直接切过去
+const query = titleEl.querySelector('.q');
+const restoreQuery = () => { query.value = nav.current?.name || ''; };
+query.addEventListener('focus', () => query.select());
+query.addEventListener('keydown', e => { if (e.key === 'Escape') { restoreQuery(); query.blur(); } });
+query.addEventListener('blur', () => { if (!query.disabled) restoreQuery(); });
+titleEl.querySelector('.find').onsubmit = async e => {
+  e.preventDefault();
+  const key = query.value.trim();
+  if (!key || tr.busy || query.disabled) return;
+  query.disabled = true; query.value = '搜索中…';
+  try {
+    const song = await searchSong(key);
+    query.disabled = false; query.blur(); titleEl.classList.remove('open');
+    tr.switchTo('pick', song);
+  } catch (err) {
+    query.disabled = false; query.value = key; query.focus();
+    toast(`没有搜到：${err.message}`);
+  }
+};
 player.onEnded(() => tr.switchTo('next')); // 播完自动下一曲
 
 // 耳机按键 / 锁屏 / 键盘媒体键：和页面上的按钮走同一套逻辑（转场进行中不响应）

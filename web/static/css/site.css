@@ -63,6 +63,15 @@ body.light { background: #fff; }
 /* 空格拆句开关：在“返回 · 上一曲 · 下一曲”那一行的上面，和它们一起出现/隐藏 */
 #title .ctrls { position: relative; }
 #title .ctrls .opts { position: absolute; left: 0; bottom: 100%; padding-bottom: 12px; opacity: 1; }
+#title .ctrls .opts { display: flex; align-items: center; gap: 18px; }
+/* 歌名输入框：平时就是一行字，点了能改，回车搜索并播放 */
+#title .find { margin: 0; }
+#title .q { font: inherit; font-size: 13px; letter-spacing: .08em; color: inherit; background: none; border: 0; border-bottom: 1px solid transparent;
+  padding: 1px 0; width: 14em; outline: none; cursor: text; opacity: .6; transition: opacity .2s, border-color .2s; user-select: text; -webkit-user-select: text; }
+#title .q::placeholder { color: inherit; opacity: .5; }
+#title .q:hover { opacity: 1; }
+#title .q:focus { opacity: 1; border-bottom-color: currentColor; }
+@media (hover: none) { #title .q { font-size: 16px; } } /* 手机上小于 16px 会让 iPhone 放大页面 */
 #title .split { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
 #title .sw { position: relative; width: 26px; height: 14px; border-radius: 8px; border: 1px solid currentColor; box-sizing: border-box; }
 #title .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; transition: transform .2s; }
@@ -80,5 +89,9 @@ body.light { background: #fff; }
 #title.open { opacity: 1; }
 #title.open .name { opacity: 0; transform: translateX(6px); }
 #title.open .ctrls { opacity: 1; transform: none; pointer-events: auto; }
-#player.idle #title { opacity: 0; pointer-events: none; }
+/* 正在输入时鼠标移开也不收起 */
+#title:focus-within { opacity: 1; }
+#title:focus-within .name { opacity: 0; transform: translateX(6px); }
+#title:focus-within .ctrls { opacity: 1; transform: none; pointer-events: auto; }
+#player.idle #title:not(:focus-within) { opacity: 0; pointer-events: none; }
 #player.idle { cursor: none; }
