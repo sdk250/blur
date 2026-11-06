@@ -7,6 +7,11 @@ const TRIES = 60;
 const SEC_PER_CHAR = 0.4; // 拆开的小句按字数分时间；后面是长间奏时，按这个语速估算时长
 const HAN = /\p{Script=Han}/u; // 只拆汉字与汉字之间的空格
 
+// 有些歌词里混着长得像汉字的部首、兼容字符（如 U+2F3C ⼼），字体里的字形和正常汉字不一样，Windows 上会明显变细。
+// 只转这几段：整体 NFKC 会连全角冒号、省略号一起改掉
+const LOOKALIKE = /[\u2E80-\u2FDF\uF900-\uFAFF\u{2F800}-\u{2FA1F}]/gu;
+const plainHan = text => text.replace(LOOKALIKE, ch => ch.normalize('NFKC'));
+
 // 一句按空格拆成几小句：只拆两边都是汉字的空格（“词 : 某某”、“A - B”、英文单词之间都不拆），带翻译的不拆
 function splitParts(text) {
   if (text.includes('\n')) return [text];
@@ -32,7 +37,7 @@ function splitParts(text) {
  * 中文句子里用空格隔开的几段拆成几小句，时间按字数比例排在这句和下一句之间（split: false 时不拆）。
  */
 export function toLines(lyric, { split = true } = {}) {
-  const raw = (lyric?.ms || []).map(l => ({ t: l.t, text: (l.c || '').trim() }));
+  const raw = (lyric?.ms || []).map(l => ({ t: l.t, text: plainHan(l.c || '').trim() }));
   const out = [];
   raw.forEach((l, i) => {
     if (!l.text) return;

@@ -114,3 +114,17 @@ test('只拆汉字与汉字之间的空格：作词作曲、冒号、连字符�
 test('拆句开关关掉时不拆', () => {
   assert.deepEqual(toLines({ ms: [{ t: 1, c: '在某年 在某月' }] }, { split: false }).map(l => l.text), ['在某年 在某月']);
 });
+
+test('康熙部首、兼容汉字转成标准汉字，其他字符（全角标点、英文）不动', () => {
+  const lyric = { ms: [
+    { t: 1, c: '若没交⼼怎么说明' },           // ⼼ -> 心
+    { t: 2, c: '⼈⼰⽌⽩⾃' }, // ⼈⼰⽌⽩⾃
+    { t: 3, c: '词：周杰伦…ABC' },                 // 全角冒号和省略号保留，整体 NFKC 会把它们改掉
+    { t: 4, c: '豈' },                         // 兼容汉字 豈
+  ] };
+  const texts = toLines(lyric).map(l => l.text);
+  assert.equal(texts[0], '若没交心怎么说明');
+  assert.equal(texts[1], '人己止白自');
+  assert.equal(texts[2], '词：周杰伦…ABC');
+  assert.equal(texts[3], '豈');
+});
