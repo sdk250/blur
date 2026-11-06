@@ -34,7 +34,7 @@ def test_top_limit_bounds(client):
 
 def test_key_validation(client):
     assert client.post('/key', data={}).status_code == 400
-    assert client.post('/key', data={'key': 'x', 'platform': 'qq'}).status_code == 400
+    assert client.post('/key', data={'key': ' / '}).status_code == 400
 
 
 def test_id_upstream_failure_is_502_json(client, monkeypatch):

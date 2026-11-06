@@ -1,5 +1,8 @@
 assets/
+docs/
+deploy/
 .superpowers/
-web/.venv/
 __pycache__/
-web/cookie.txt
+.pytest_cache/
+backend/.venv/
+backend/cookie.txt

@@ -15,4 +15,4 @@ const post = (path, form) => fetch(path, { method: 'POST', body: new URLSearchPa
 
 export const fetchTop = (limit = 100) => fetch(`top?limit=${limit}`, { signal: signal() }).then(json);
 export const fetchSong = id => post('id', { songid: id });
-export const searchSong = key => post('key', { key, platform: 'netease' });
+export const searchSong = key => post('key', { key });

@@ -3,8 +3,8 @@
 接口
   GET  /top?limit=100       榜单（来自 top.json），每首只有 id / name / art / picture，用来铺封面拼图
   POST /id    songid=...&level=exhigh   一首歌的完整信息（播放链接 + 封面 + 歌词）；不传 songid 则从榜单随机一首
-              会员歌曲需要在 web/cookie.txt 放会员账号的 Cookie（至少 MUSIC_U），否则这类歌 data 为 null
-  POST /key   key=...&platform=netease|kuwo   搜索，返回最匹配的一首（结构同 /id）
+              会员歌曲需要在 backend/cookie.txt 放会员账号的 Cookie（至少 MUSIC_U），否则这类歌 data 为 null
+  POST /key   key=...   搜索，返回最匹配的一首（结构同 /id）
 
 /id 和 /key 返回：
   { id, name, art: [歌手], data: 播放链接|null, picture: 封面|null,
@@ -22,7 +22,8 @@ from Crypto.Cipher import AES
 from flask import Flask, Response, abort, request, send_file
 from requests import Session
 
-HERE = path.dirname(__file__)
+HERE = path.dirname(path.abspath(__file__))
+FRONTEND = path.join(HERE, '..', 'frontend')
 USER_AGENT = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
     '(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0'
@@ -36,7 +37,7 @@ EAPI_UA = (
 # 音质：standard / exhigh(320k mp3) / lossless(flac) / hires ...，会员歌曲需要 cookie.txt
 DEFAULT_LEVEL = 'exhigh'
 
-app = Flask(__name__, static_folder='static', static_url_path='')  # 前端和接口同源
+app = Flask(__name__, static_folder=FRONTEND, static_url_path='')  # 前端和接口同源
 app.url_map.strict_slashes = False
 session = Session()
 TIMEOUT = (5, 15)  # 连接 / 读取超时：上游卡住时尽快失败，不让前端转场一直挂着
@@ -134,7 +135,7 @@ def parse_lrc(texts: list[str]) -> dict | None:
 
 
 def load_cookies() -> dict:
-    """读 web/cookie.txt（会员账号的网页版 Cookie，至少要有 MUSIC_U），格式 a=1; b=2，也可以一行一个。"""
+    """读 backend/cookie.txt（会员账号的网页版 Cookie，至少要有 MUSIC_U），格式 a=1; b=2，也可以一行一个。"""
     file = path.join(HERE, 'cookie.txt')
     if not path.exists(file):
         return {}
@@ -206,59 +207,6 @@ def netease_search(key: str, level: str = DEFAULT_LEVEL) -> dict | None:
     found = result.get('result')
     songs = found.get('songs') if isinstance(found, dict) else None
     return netease_song(songs[0]['id'], level) if songs else None
-
-
-# ---------- 酷我 ----------
-
-def kuwo_search(key: str) -> dict | None:
-    result = loads(session.get(
-        timeout=TIMEOUT,
-        url='http://kuwo.cn/search/searchMusicBykeyWord',
-        params={
-            'ft': 'music', 'vipver': 1, 'client': 'kt', 'cluster': 0, 'strategy': 2012,
-            'issubtitle': 1, 'encoding': 'utf8', 'rformat': 'json', 'rn': 1, 'all': key,
-        },
-    ).content.replace(b"'", b'"'))
-    if not result.get('abslist'):
-        return None
-    hit = result['abslist'][0]
-    rid = hit['DC_TARGETID']
-
-    play = loads(session.get(
-        timeout=TIMEOUT,
-        url='https://mobi.kuwo.cn/mobi.s',
-        params={
-            'f': 'web', 'source': 'kwplayer_ar_1.1.9_jiakong_118980_320.apk',
-            'type': 'convert_url_with_sign', 'rid': rid, 'br': '2000',
-        },
-    ).content)
-    data = None
-    if play.get('code') == 200 and play.get('data', {}).get('url'):
-        data = f'https://example.com/proxy/{play["data"]["url"][len("http://"):]}'
-
-    lyric = loads(session.get(
-        timeout=TIMEOUT,
-        url='https://kuwo.cn/openapi/v1/www/lyric/getlyric',
-        params={'musicId': rid},
-    ).content)
-    ms: list[dict] = []
-    for item in (lyric.get('data') or {}).get('lrclist') or []:
-        t = round(float(item['time']), 3)
-        if ms and ms[-1]['t'] == t:  # 同一时间点（原文 + 翻译）合成一句
-            ms[-1]['c'] += '\n' + item['lineLyric']
-        else:
-            ms.append(dict(t=t, c=item['lineLyric']))
-    if ms:
-        ms.append(dict(t=ms[-1]['t'] + 3, c=''))
-
-    return dict(
-        id=int(rid),
-        name=hit['NAME'],
-        art=[hit['ARTIST']],
-        data=data,
-        picture=f'https://img2.kuwo.cn/star/albumcover/500{hit["web_albumpic_short"][3:]}',
-        lyric=dict(ti='', ar='', al='', by='', offset=0, ms=ms) if ms else None,
-    )
 
 
 # ---------- 彩蛋：本地歌 ----------
@@ -352,24 +300,20 @@ def song_by_id():
 @app.route('/key', methods=['POST'])
 def search():
     key = (request.form.get('key') or '').strip()
-    platform = request.form.get('platform') or 'netease'
-    if key.startswith('/'):  # 兼容旧写法：以 / 开头强制走网易云
-        key, platform = key[1:].strip(), 'netease'
+    if key.startswith('/'):  # 兼容旧写法：以 / 开头的关键词
+        key = key[1:].strip()
     if not key:
         return json_response({'msg': '缺少关键词'}, 400)
     for song_id, entry in LOCAL.items():  # 彩蛋
         if key == entry['key'] and (song := local_song(song_id)):
             return json_response(song)
-    if platform not in ('netease', 'kuwo'):
-        return json_response({'msg': f'不支持的平台: {platform}'}, 400)
     try:
-        level = request.form.get('level') or DEFAULT_LEVEL
-        song = netease_search(key, level) if platform == 'netease' else kuwo_search(key)
+        song = netease_search(key, request.form.get('level') or DEFAULT_LEVEL)
     except Exception as e:
         return json_response({'msg': f'搜索失败: {e}'}, 502)
     return json_response(song) if song else json_response({'msg': '没有找到'}, 404)
 
 
 if __name__ == '__main__':
-    # 本地开发：python api.py；线上用 gunicorn（见 deploy/）
+    # 本地开发：python api.py；线上用 gunicorn（见 README）
     app.run(environ.get('BLUR_HOST', '0.0.0.0'), int(environ.get('BLUR_PORT', 20800)), debug=False)
