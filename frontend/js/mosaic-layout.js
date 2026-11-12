@@ -4,9 +4,11 @@ const GAP = 4;
 
 /**
  * @returns {{ cell, cols, rows, search: Rect, tiles: Rect[] }}
+ *   tiles 按离屏幕中心由近到远排：歌按热度依次填进去，最火的在中间
+ *   opts.lead：大于 0 时第一个格子固定为 lead x lead，放在离中心最近、放得下的位置
  *   Rect = { r, c, n, left, top, size }：r/c/n 是网格坐标与边长（格数），left/top/size 是屏幕像素（已扣间距）
  */
-export function layoutMosaic(view, rand = Math.random) {
+export function layoutMosaic(view, rand = Math.random, { lead = 0 } = {}) {
   const cell = Math.max(72, Math.min(120, view.w / 14));
   const cols = Math.ceil(view.w / cell) + 1, rows = Math.ceil(view.h / cell) + 1;
   const ox = (cols * cell - view.w) / 2, oy = (rows * cell - view.h) / 2; // 整体居中
@@ -22,6 +24,18 @@ export function layoutMosaic(view, rand = Math.random) {
   take(sr, sc, 3);
   const search = rect(sr, sc, 3);
 
+  const center = (r, c, n) => Math.hypot((c + n / 2) * cell - ox - view.w / 2, (r + n / 2) * cell - oy - view.h / 2);
+  let first = null;
+  for (let n = lead; n > 0 && !first; n--) {
+    let best = null;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (!fits(r, c, n)) continue;
+      const d = center(r, c, n);
+      if (!best || d < best.d) best = { r, c, d };
+    }
+    if (best) { take(best.r, best.c, n); first = rect(best.r, best.c, n); }
+  }
+
   const tiles = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     if (used[r][c]) continue;
@@ -31,6 +45,9 @@ export function layoutMosaic(view, rand = Math.random) {
     take(r, c, n);
     tiles.push(rect(r, c, n));
   }
+  const dist = t => Math.hypot(t.left + t.size / 2 - view.w / 2, t.top + t.size / 2 - view.h / 2);
+  tiles.sort((a, b) => dist(a) - dist(b));
+  if (first) tiles.unshift(first);
   return { cell, cols, rows, search, tiles };
 }
 

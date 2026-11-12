@@ -52,3 +52,28 @@ test('歌名位置：左半边的封面歌名靠右，只排在封面露出屏�
   assert.equal(captionBox({ left: 990, size: 96 }, W).hidden, true);
   assert.equal(captionBox({ left: -70, size: 96 }, W).hidden, true);
 });
+
+test('格子按离屏幕中心由近到远排：最火的歌（数组前面的）放在中间，越往外越冷门', () => {
+  for (const v of views) for (const seed of [1, 2, 3]) {
+    const m = layoutMosaic(v, seeded(seed));
+    const d = m.tiles.map(t => Math.hypot(t.left + t.size / 2 - v.w / 2, t.top + t.size / 2 - v.h / 2));
+    for (let i = 1; i < d.length; i++) assert.ok(d[i] >= d[i - 1], `第 ${i} 个格子比前一个离中心更近`);
+  }
+});
+
+test('lead：第一个格子固定为指定边长，紧挨着搜索格，其余照常由近到远', () => {
+  for (const v of views) for (const seed of [1, 2, 3]) {
+    const m = layoutMosaic(v, seeded(seed), { lead: 3 });
+    const [first, ...rest] = m.tiles;
+    assert.equal(first.n, 3);
+    const s = m.search;
+    const touches = first.r < s.r + 3 && first.r + 3 > s.r ? first.c + 3 === s.c || first.c === s.c + 3
+      : first.c < s.c + 3 && first.c + 3 > s.c && (first.r + 3 === s.r || first.r === s.r + 3);
+    assert.ok(touches, '没有紧挨着搜索格');
+    const grid = Array.from({ length: m.rows }, () => new Array(m.cols).fill(0));
+    for (const t of [s, ...m.tiles]) for (let i = t.r; i < t.r + t.n; i++) for (let j = t.c; j < t.c + t.n; j++) grid[i][j]++;
+    assert.ok(grid.flat().every(x => x === 1), '有重叠或空洞');
+    const d = rest.map(t => Math.hypot(t.left + t.size / 2 - v.w / 2, t.top + t.size / 2 - v.h / 2));
+    for (let i = 1; i < d.length; i++) assert.ok(d[i] >= d[i - 1]);
+  }
+});
