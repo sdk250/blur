@@ -132,8 +132,16 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
   addEventListener('pointerdown', e => { if (!titleEl.contains(e.target)) titleEl.classList.remove('open'); });
 
   // ---------- 一首歌 ----------
+  // 黑白底：每首歌按封面明暗自动选，开关可以把这首翻过来，换歌后重新按封面
+  let pixels = null, dark = true, themeId = 0; // themeId：淡出途中换了歌或又点了一次，旧的那次不再生效
   function applyCover(img) {
-    const theme = themeFromPixels(coverPixels(img));
+    themeId++;
+    pixels = coverPixels(img);
+    applyTheme(themeFromPixels(pixels));
+  }
+  function applyTheme(theme) {
+    dark = theme.dark;
+    titleEl.classList.toggle('light-on', !dark);
     bg.setTheme(theme);
     document.body.classList.toggle('light', !theme.dark);
     playerEl.style.setProperty('--lyric', rgb(theme.lyric));
@@ -146,6 +154,21 @@ export function createPlayer({ playerEl, titleEl, audio, stage, bg, media }) {
     get playing() { return playing; },
     get active() { return active; },
     fadePlay, fadePause, toggle,
+
+    get dark() { return dark; },
+    /** 手动切黑白底：背景先淡出露出底色，换好配色再淡入 */
+    setDark(on) {
+      if (!active || on === dark) return;
+      const cv = bg.canvas;
+      const id = ++themeId;
+      const swap = () => id === themeId && applyTheme(themeFromPixels(pixels, Math.random, { dark: on }));
+      if (!cv?.animate || document.hidden) { swap(); return; }
+      dark = on; titleEl.classList.toggle('light-on', !on);
+      cv.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-in' }).onfinish = () => {
+        swap();
+        cv.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 700, easing: 'ease-out' });
+      };
+    },
 
     get split() { return split; },
     /** 切换空格拆句：播放中立刻生效——场上的歌词照常退场，从当前位置按新规则继续 */

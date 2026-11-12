@@ -86,10 +86,10 @@ function coverLum(data) {
  *   封面偏暗 -> 纯黑底 + 叠加发光，色雾取封面色相、随机提成亮色，歌词浅色
  *   封面偏亮 -> 纯白底 + 正片叠底，色雾取封面色相、随机压成暗色，歌词深色
  * 几乎是灰色的颜色没有可用的色相，随机给一个，否则提亮后是一片灰白。
- * data 为 null（读不到封面）时按偏暗处理。
+ * data 为 null（读不到封面）时按偏暗处理。opt.dark 给了就不看封面明暗（用户手动切黑白底）。
  */
-export function themeFromPixels(data, rand = Math.random) {
-  const dark = !data || !data.length || coverLum(data) <= 0.5;
+export function themeFromPixels(data, rand = Math.random, opt = {}) {
+  const dark = opt.dark ?? (!data || !data.length || coverLum(data) <= 0.5);
   const mist = paletteFromPixels(data).map(c => {
     const [h0, s0] = toHsl(c);
     const h = s0 < 0.15 ? rand() * 360 : h0;

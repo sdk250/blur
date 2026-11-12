@@ -51,7 +51,7 @@ export function createBackground(canvas) {
   }
 
   return {
-    focus, vp, step,
+    focus, vp, step, canvas,
     /** 换一首歌：颜色直接到位（封面正挡着屏幕，不需要渐变） */
     setTheme(theme) {
       base = theme.base.slice(); blend = theme.blend; palette = theme.mist.map(c => c.slice());

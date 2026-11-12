@@ -36,6 +36,7 @@ titleEl.querySelector('.back').onclick = () => tr.leave();
 titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
 titleEl.querySelector('.next').onclick = () => tr.switchTo('next');
 titleEl.querySelector('.pp').onclick = () => { if (!tr.busy) player.toggle(); };
+titleEl.querySelector('.light').onclick = () => { if (!tr.busy) player.setDark(!player.dark); };
 titleEl.querySelector('.split').onclick = () => { if (!tr.busy) player.setSplit(!player.split); };
 
 // 左下角歌名输入框：改成想听的，回车搜索，搜到就直接切过去

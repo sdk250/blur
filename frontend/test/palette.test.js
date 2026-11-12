@@ -82,3 +82,11 @@ test('读不到封面像素：按偏暗处理（黑底 + 亮色雾），不报�
   assert.equal(t.dark, true);
   assert.equal(t.mist.length, 5);
 });
+
+test('手动指定黑底/白底：不看封面明暗，配色跟着那一档走', () => {
+  const w = themeFromPixels(solid(30, 30, 45), seeded(7), { dark: false });
+  assert.deepEqual(pick(w), { dark: false, base: [255, 255, 255], blend: 'multiply' });
+  for (const c of w.mist) assert.ok(L(c) <= 0.35 + 1e-6);
+  const b = themeFromPixels(solid(235, 225, 205), seeded(7), { dark: true });
+  assert.deepEqual(pick(b), { dark: true, base: [0, 0, 0], blend: 'lighter' });
+});
