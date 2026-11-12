@@ -62,18 +62,30 @@ test('格子按离屏幕中心由近到远排：最火的歌（数组前面的�
 });
 
 test('lead：第一个格子固定为指定边长，紧挨着搜索格，其余照常由近到远', () => {
-  for (const v of views) for (const seed of [1, 2, 3]) {
-    const m = layoutMosaic(v, seeded(seed), { lead: 3 });
-    const [first, ...rest] = m.tiles;
-    assert.equal(first.n, 3);
+  for (const lead of [2, 3]) for (const v of views) for (const seed of [1, 2, 3]) {
+    const m = layoutMosaic(v, seeded(seed), { lead });
+    const [first, ...rest] = m.tiles, n = lead;
+    assert.equal(first.n, n);
     const s = m.search;
-    const touches = first.r < s.r + 3 && first.r + 3 > s.r ? first.c + 3 === s.c || first.c === s.c + 3
-      : first.c < s.c + 3 && first.c + 3 > s.c && (first.r + 3 === s.r || first.r === s.r + 3);
+    const touches = first.r < s.r + 3 && first.r + n > s.r ? first.c + n === s.c || first.c === s.c + 3
+      : first.c < s.c + 3 && first.c + n > s.c && (first.r + n === s.r || first.r === s.r + 3);
     assert.ok(touches, '没有紧挨着搜索格');
     const grid = Array.from({ length: m.rows }, () => new Array(m.cols).fill(0));
     for (const t of [s, ...m.tiles]) for (let i = t.r; i < t.r + t.n; i++) for (let j = t.c; j < t.c + t.n; j++) grid[i][j]++;
     assert.ok(grid.flat().every(x => x === 1), '有重叠或空洞');
     const d = rest.map(t => Math.hypot(t.left + t.size / 2 - v.w / 2, t.top + t.size / 2 - v.h / 2));
     for (let i = 1; i < d.length; i++) assert.ok(d[i] >= d[i - 1]);
+  }
+});
+
+test('lead：位置在搜索格四周随机挑，每次可以不同，但都完整显示在屏幕里', () => {
+  for (const v of views) {
+    const spots = new Set();
+    for (let seed = 1; seed <= 40; seed++) {
+      const f = layoutMosaic(v, seeded(seed), { lead: 2 }).tiles[0];
+      spots.add(`${f.r},${f.c}`);
+      assert.ok(f.left >= 0 && f.top >= 0 && f.left + f.size <= v.w && f.top + f.size <= v.h, '超出屏幕');
+    }
+    assert.ok(spots.size >= 3, `只出现了 ${spots.size} 个位置`);
   }
 });

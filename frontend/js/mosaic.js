@@ -59,7 +59,7 @@ export function buildMosaic(homeEl, songs, { onPick, toast, searchTile: keep = n
   const view = { w: innerWidth, h: innerHeight };
   const at = songs.findIndex(s => s.name === mark());
   if (at >= 0) songs = [songs[at], ...songs.slice(0, at), ...songs.slice(at + 1)];
-  const layout = layoutMosaic(view, Math.random, { lead: at >= 0 ? 3 : 0 });
+  const layout = layoutMosaic(view, Math.random, { lead: at >= 0 ? 2 : 0 });
   const tileOf = new Map();
 
   const searchTile = keep || makeSearchTile(onPick, toast);

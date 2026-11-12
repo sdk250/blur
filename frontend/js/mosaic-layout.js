@@ -5,7 +5,7 @@ const GAP = 4;
 /**
  * @returns {{ cell, cols, rows, search: Rect, tiles: Rect[] }}
  *   tiles 按离屏幕中心由近到远排：歌按热度依次填进去，最火的在中间
- *   opts.lead：大于 0 时第一个格子固定为 lead x lead，放在离中心最近、放得下的位置
+ *   opts.lead：大于 0 时第一个格子固定为 lead x lead，随机放在紧贴搜索格、完整露在屏幕里的位置（没有就放离中心最近处）
  *   Rect = { r, c, n, left, top, size }：r/c/n 是网格坐标与边长（格数），left/top/size 是屏幕像素（已扣间距）
  */
 export function layoutMosaic(view, rand = Math.random, { lead = 0 } = {}) {
@@ -25,15 +25,22 @@ export function layoutMosaic(view, rand = Math.random, { lead = 0 } = {}) {
   const search = rect(sr, sc, 3);
 
   const center = (r, c, n) => Math.hypot((c + n / 2) * cell - ox - view.w / 2, (r + n / 2) * cell - oy - view.h / 2);
+  const visible = (r, c, n) => { const x = rect(r, c, n); return x.left >= 0 && x.top >= 0 && x.left + x.size <= view.w && x.top + x.size <= view.h; };
+  // 和搜索格共用一段边（不算只碰到角）
+  const touches = (r, c, n) => (r + n === sr || r === sr + 3) ? c < sc + 3 && c + n > sc
+    : (c + n === sc || c === sc + 3) && r < sr + 3 && r + n > sr;
   let first = null;
   for (let n = lead; n > 0 && !first; n--) {
+    const near = [];
     let best = null;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       if (!fits(r, c, n)) continue;
+      if (touches(r, c, n) && visible(r, c, n)) near.push({ r, c });
       const d = center(r, c, n);
       if (!best || d < best.d) best = { r, c, d };
     }
-    if (best) { take(best.r, best.c, n); first = rect(best.r, best.c, n); }
+    const at = near.length ? near[Math.floor(rand() * near.length)] : best;
+    if (at) { take(at.r, at.c, n); first = rect(at.r, at.c, n); }
   }
 
   const tiles = [];
