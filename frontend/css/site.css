@@ -30,6 +30,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; transi
 .search.found form { position: absolute; bottom: 12px; }
 .search.found .who { position: absolute; top: 14px; left: 10px; right: 10px; }
 
+/* 首页右下角的版本号（手动改）：小字半透明，不挡点击，离开首页时一起淡出 */
+#version { position: fixed; right: 12px; bottom: 8px; z-index: 11; font-size: 11px; letter-spacing: .05em; color: #fff;
+  opacity: .45; text-shadow: 0 1px 4px rgba(0,0,0,.9); pointer-events: none; transition: opacity .6s; }
+#home.away ~ #version { opacity: 0; }
+
 /* 进入/返回时用的封面替身 */
 #ghost { position: fixed; z-index: 20; object-fit: cover; pointer-events: none; border-radius: 6px; }
 #toast { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); z-index: 30; padding: 8px 16px; border-radius: 8px;
