@@ -1,5 +1,5 @@
 // 首页拼图：大小不一的封面墙，正中是搜索格。点封面 -> onPick(格子, 取歌函数, 已知的歌名/歌手/封面)
-import { layoutMosaic } from './mosaic-layout.js';
+import { layoutMosaic, captionBox } from './mosaic-layout.js';
 import { smallCover, fetchSong, searchSong } from './api.js';
 
 function loadImg(img, src) {
@@ -67,7 +67,10 @@ export function buildMosaic(homeEl, songs, { onPick, toast, searchTile: keep = n
     const t = document.createElement('div');
     t.className = 'tile';
     t.innerHTML = '<img alt=""><div class="cap"></div>';
-    t.querySelector('.cap').textContent = `${song.name} · ${song.art.join(' / ')}`;
+    const cap = t.querySelector('.cap'), box = captionBox(rect, view.w);
+    cap.textContent = `${song.name} · ${song.art.join(' / ')}`;
+    // 歌名不能排到屏幕外面去（.cap 本身左右各留 10px）
+    Object.assign(cap.style, { paddingLeft: `${10 + box.left}px`, paddingRight: `${10 + box.right}px`, textAlign: box.align, display: box.hidden ? 'none' : '' });
     loadImg(t.querySelector('img'), smallCover(song.picture));
     t.onclick = () => onPick(t, () => fetchSong(song.id), song);
     if (!tileOf.has(song.id)) tileOf.set(song.id, t);

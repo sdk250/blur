@@ -33,3 +33,18 @@ export function layoutMosaic(view, rand = Math.random) {
   }
   return { cell, cols, rows, search, tiles };
 }
+
+/**
+ * 封面上的歌名怎么排：拼图比屏幕宽，最边上的封面有一截在屏幕外。
+ * 左半边的封面歌名靠右；只排在封面露出屏幕的那一段（left / right 是两边要让出的像素）。
+ * 露出不到 MIN_CAPTION 像素时放不下歌名，hidden 为 true。
+ */
+const MIN_CAPTION = 40;
+export function captionBox(rect, viewW) {
+  const left = Math.max(0, -rect.left), right = Math.max(0, rect.left + rect.size - viewW);
+  return {
+    left, right,
+    align: rect.left + rect.size / 2 < viewW / 2 ? 'right' : 'left',
+    hidden: rect.size - left - right < MIN_CAPTION,
+  };
+}

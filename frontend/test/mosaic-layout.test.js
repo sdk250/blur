@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { layoutMosaic } from '../js/mosaic-layout.js';
+import { layoutMosaic, captionBox } from '../js/mosaic-layout.js';
 import { seeded } from './helpers.js';
 
 const views = [{ w: 1600, h: 900 }, { w: 1280, h: 720 }, { w: 390, h: 844 }, { w: 2560, h: 1440 }];
@@ -36,4 +36,19 @@ test('cell 夹在 72~120', () => {
   assert.equal(layoutMosaic({ w: 600, h: 800 }).cell, 72);
   assert.equal(layoutMosaic({ w: 3000, h: 1500 }).cell, 120);
   assert.equal(layoutMosaic({ w: 1400, h: 900 }).cell, 100);
+});
+
+test('歌名位置：左半边的封面歌名靠右，只排在封面露出屏幕的那一段', () => {
+  const W = 1000;
+  // 左边一半在屏幕外
+  assert.deepEqual(captionBox({ left: -40, size: 96 }, W), { left: 40, right: 0, align: 'right', hidden: false });
+  // 左半边、完整在屏幕里
+  assert.deepEqual(captionBox({ left: 100, size: 96 }, W), { left: 0, right: 0, align: 'right', hidden: false });
+  // 右半边，右边一截在屏幕外
+  assert.deepEqual(captionBox({ left: 950, size: 96 }, W), { left: 0, right: 46, align: 'left', hidden: false });
+  // 右半边、完整在屏幕里
+  assert.deepEqual(captionBox({ left: 700, size: 96 }, W), { left: 0, right: 0, align: 'left', hidden: false });
+  // 只露出一小截：放不下歌名，不显示
+  assert.equal(captionBox({ left: 990, size: 96 }, W).hidden, true);
+  assert.equal(captionBox({ left: -70, size: 96 }, W).hidden, true);
 });

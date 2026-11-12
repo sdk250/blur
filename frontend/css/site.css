@@ -11,7 +11,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; transi
 .tile img.ok { opacity: 1; }
 /* 放大由 mosaic-lens.js 按鼠标位置写进 transform；鼠标正落在的那张加 .hit */
 .tile.hit { box-shadow: 0 10px 40px rgba(0,0,0,.6); }
-.tile .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 8px; font-size: 12px; line-height: 1.4;
+.tile .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 8px; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; /* 封面只露出一小截时，英文长词也要能折行 */
   background: linear-gradient(transparent, rgba(0,0,0,.7)); opacity: 0; transition: opacity .25s; pointer-events: none; }
 .tile:hover .cap { opacity: 1; }
 
