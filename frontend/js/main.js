@@ -9,6 +9,8 @@ import { Navigator } from './navigation.js';
 import { shouldRebuild } from './resize-policy.js';
 import { createLongPress, toggleFullscreen } from './fullscreen.js';
 import { createMediaSession } from './media-session.js';
+import { attachLens } from './mosaic-lens.js';
+import { LENS } from './tune.js';
 
 const $ = id => document.getElementById(id);
 const home = $('home'), playerEl = $('player'), titleEl = $('title');
@@ -26,6 +28,9 @@ const player = createPlayer({ playerEl, titleEl, audio: $('audio'), stage, bg, m
 const nav = new Navigator([]);
 let mosaic = null;
 const tr = createTransitions({ home, player, nav, mosaic: () => mosaic, toast });
+const lens = attachLens(home, LENS);
+// 点封面：转场先按封面此刻（放大后）的大小量好位置，再让拼图复原
+const pick = (...args) => { const done = tr.enter(...args); lens.reset(); return done; };
 
 titleEl.querySelector('.back').onclick = () => tr.leave();
 titleEl.querySelector('.prev').onclick = () => tr.switchTo('prev');
@@ -77,7 +82,7 @@ playerEl.addEventListener('contextmenu', e => e.preventDefault()); // 手机长�
 
 // 首次构建播浮现动画；之后的重建沿用搜索格、不播动画
 const build = songs => {
-  mosaic = buildMosaic(home, songs, { onPick: tr.enter, toast, searchTile: mosaic?.searchTile, animate: !mosaic });
+  mosaic = buildMosaic(home, songs, { onPick: pick, toast, searchTile: mosaic?.searchTile, animate: !mosaic });
 };
 
 (async () => {

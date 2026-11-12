@@ -84,7 +84,9 @@ export function createTransitions({ home, player, nav, mosaic, toast }) {
   async function enter(tile, getSong, info) {
     if (busy) return; lock(true);
     const cover = tile.querySelector('img');
-    const rect = rectOf(tile);
+    // 从封面此刻在屏幕上的样子出发（鼠标放大镜会把它放大），不然替身一出现会缩一下
+    const b = tile.getBoundingClientRect();
+    const rect = { left: b.left, top: b.top, width: b.width, height: b.height };
     const ghost = makeGhost(cover.src, rect);
     tile.style.visibility = 'hidden'; hidden = tile;
 

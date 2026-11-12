@@ -17,4 +17,6 @@ export const FADE_TOGGLE_MS = 500; // 空格播放/暂停的音量淡入淡出
 export const FADE_IN_MS = 300;     // 进入/切歌时音乐淡入
 export const FADE_OUT_MS = 800;    // 返回/切歌时音乐淡出
 export const RECENT = 10;          // 随机下一曲避开最近几首
+// 首页放大镜：鼠标周围 radius 像素内的封面一起放大（最多长出 grow 像素），鼠标正落在的那张再多长出 hitGrow 像素
+export const LENS = { radius: 200, grow: 4, hitGrow: 10 };
 export const MIST = { alpha: 0.55, radius: 1 }; // 色雾每团最浓不透明度、大小倍数（用户最早确认的样子）
